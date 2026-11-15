@@ -1,0 +1,55 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Install npm Dependencies",
+      "type": "shell",
+      "command": "npm install",
+      "problemMatcher": []
+    },
+    {
+      "label": "Setup & Start Dev Server (npm install + npm run dev)",
+      "type": "shell",
+      "command": "npm install && npm run dev",
+      "isBackground": true,
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*",
+          "endsPattern": "listening on http"
+        }
+      }
+    },
+    {
+      "label": "Start Dev Server (npm run dev)",
+      "type": "npm",
+      "script": "dev",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*",
+          "endsPattern": "listening on http"
+        }
+      }
+    },
+    {
+      "label": "Build Static Bundle for Live Server (npm run build)",
+      "type": "npm",
+      "script": "build",
+      "problemMatcher": []
+    }
+  ]
+}

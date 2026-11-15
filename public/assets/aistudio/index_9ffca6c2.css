@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+    background-color: #07090e;
+    font-family: var(--font-sans);
+  }
+}

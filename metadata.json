@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Remix Remix Mascu-Skeletal Diagnosis",
+  "description": "Orbital musculoskeletal health, 3D bone-density telemetry, physical treatment countermeasure coaching, and flight-surgeon crew review platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,3998 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mascu-Skeletal Diagnosis</title>
+    <meta
+      name="description"
+      content="Orbital musculoskeletal health and bone-density diagnostic interface."
+    />
+    <meta property="og:title" content="Mascu-Skeletal Diagnosis" />
+    <meta
+      property="og:description"
+      content="Orbital musculoskeletal health and bone-density diagnostic interface."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-obsidian: #07090e;
+        --bg-panel: rgba(11, 14, 23, 0.82);
+        --bg-panel-solid: #0b0e17;
+        --bg-input: rgba(7, 9, 14, 0.92);
+        --border-hairline: rgba(255, 255, 255, 0.12);
+        --border-red: rgba(239, 68, 68, 0.58);
+        --border-cyan: rgba(6, 182, 212, 0.58);
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-muted: #94a3b8;
+        --accent-red: #ef4444;
+        --accent-red-soft: #f87171;
+        --accent-cyan: #22d3ee;
+        --font-display: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
+        --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+        --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        background-color: var(--bg-obsidian);
+        color: var(--text-primary);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+
+      button,
+      input,
+      select {
+        font-family: inherit;
+      }
+
+      /* Stationary Space Backdrop */
+      .space-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        user-select: none;
+        overflow: hidden;
+        background: radial-gradient(ellipse at bottom, #0f294a 0%, #07090e 62%);
+      }
+
+      .space-backdrop img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        display: block;
+      }
+
+      .space-scrim-left {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          rgba(7, 9, 14, 0.72) 0%,
+          rgba(7, 9, 14, 0.18) 48%,
+          transparent 100%
+        );
+      }
+
+      .space-scrim-page {
+        position: absolute;
+        inset: 0;
+        background: rgba(7, 9, 14, 0.76);
+        backdrop-filter: blur(4px);
+        opacity: 0;
+        transition: opacity 250ms ease;
+      }
+
+      .space-scrim-page.is-active {
+        opacity: 1;
+      }
+
+      /* App Stage */
+      .app-stage {
+        position: relative;
+        z-index: 10;
+        min-height: 100vh;
+        width: 100%;
+      }
+
+      .view {
+        position: relative;
+        min-height: 100vh;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 32px 24px;
+        animation: viewFadeIn 260ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .view[hidden] {
+        display: none !important;
+      }
+
+      @media (min-width: 640px) {
+        .view {
+          padding: 40px 48px;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .view {
+          padding: 48px 64px;
+        }
+      }
+
+      /* Floating Astronaut (Only astronaut moves; background stays completely still) */
+      .astronaut-anchor {
+        position: absolute;
+        top: 4%;
+        right: 2%;
+        width: 210px;
+        opacity: 0.88;
+        pointer-events: none;
+        user-select: none;
+        z-index: 1;
+      }
+
+      @media (min-width: 640px) {
+        .astronaut-anchor {
+          top: 5%;
+          right: 6%;
+          width: 285px;
+          opacity: 1;
+        }
+      }
+
+      @media (min-width: 768px) {
+        .astronaut-anchor {
+          right: 8%;
+          width: 335px;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .astronaut-anchor {
+          top: 4%;
+          right: 9%;
+          width: 385px;
+        }
+      }
+
+      .astronaut-float {
+        will-change: transform;
+        animation: astronautDrift 7.5s ease-in-out infinite;
+      }
+
+      .astronaut-float img {
+        width: 100%;
+        height: auto;
+        display: block;
+        object-fit: contain;
+        filter: drop-shadow(0 0 22px rgba(239, 68, 68, 0.2));
+      }
+
+      @keyframes astronautDrift {
+        0%,
+        100% {
+          transform: translateY(0px) rotate(-0.6deg);
+        }
+        50% {
+          transform: translateY(-14px) rotate(0.7deg);
+        }
+      }
+
+      @keyframes viewFadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes navSlideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-18px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes popIn {
+        from {
+          opacity: 0;
+          transform: scale(0.97) translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .astronaut-float,
+        .view,
+        .mission-btn,
+        .pop-animate {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+
+      /* Orbit Header & Giant White Welcome */
+      .orbit-header {
+        position: relative;
+        z-index: 10;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        max-width: 48rem;
+      }
+
+      .brand-title {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: 1.125rem;
+        font-weight: 600;
+        letter-spacing: 0.025em;
+        color: #e2e8f0;
+      }
+
+      @media (min-width: 640px) {
+        .brand-title {
+          font-size: 1.25rem;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .brand-title {
+          font-size: 1.5rem;
+        }
+      }
+
+      .welcome-wrap {
+        margin: auto 0;
+        padding: 32px 0;
+      }
+
+      .welcome-heading {
+        margin: 0;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: clamp(4.25rem, 11vw, 11rem);
+        line-height: 0.94;
+        letter-spacing: -0.025em;
+        color: #ffffff;
+        text-wrap: balance;
+      }
+
+      /* Bottom-Left 6 Mission Navigation Buttons */
+      .orbit-nav {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        width: 100%;
+        max-width: 384px;
+        padding-top: 10px;
+      }
+
+      .mission-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        width: 100%;
+        min-height: 44px;
+        padding: 10px 18px;
+        border-radius: 12px;
+        border: 1px solid var(--border-hairline);
+        background: rgba(11, 14, 23, 0.78);
+        backdrop-filter: blur(12px);
+        color: #f1f5f9;
+        cursor: pointer;
+        text-align: left;
+        transition:
+          transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+          border-color 180ms ease,
+          background-color 180ms ease,
+          box-shadow 180ms ease;
+        animation: navSlideIn 320ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+      }
+
+      .mission-btn:nth-child(1) { animation-delay: 50ms; }
+      .mission-btn:nth-child(2) { animation-delay: 95ms; }
+      .mission-btn:nth-child(3) { animation-delay: 140ms; }
+      .mission-btn:nth-child(4) { animation-delay: 185ms; }
+      .mission-btn:nth-child(5) { animation-delay: 230ms; }
+      .mission-btn:nth-child(6) { animation-delay: 275ms; }
+
+      .mission-btn:hover {
+        transform: translateX(6px);
+        border-color: var(--border-red);
+        background: rgba(17, 23, 38, 0.92);
+        box-shadow: 0 0 24px rgba(239, 68, 68, 0.18);
+      }
+
+      .mission-btn:focus-visible,
+      .btn-primary:focus-visible,
+      .btn-secondary:focus-visible,
+      .role-card:focus-visible,
+      .top-link:focus-visible,
+      .tab-btn:focus-visible {
+        outline: 2px solid var(--accent-red);
+        outline-offset: 2px;
+      }
+
+      .mission-btn-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        min-width: 0;
+      }
+
+      .mission-index {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: var(--accent-red);
+        font-variant-numeric: tabular-nums;
+        flex-shrink: 0;
+      }
+
+      .mission-label {
+        font-family: var(--font-display);
+        font-size: 0.95rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      @media (min-width: 640px) {
+        .mission-label {
+          font-size: 1rem;
+        }
+      }
+
+      .mission-arrow {
+        width: 16px;
+        height: 16px;
+        color: var(--text-muted);
+        flex-shrink: 0;
+        transition: transform 180ms ease, color 180ms ease;
+      }
+
+      .mission-btn:hover .mission-arrow {
+        transform: translateX(4px);
+        color: var(--accent-red-soft);
+      }
+
+      /* Minimal Inner Page Top Title (only Mascu-Skeletal Diagnosis, matching Orbit header) */
+      .page-topbar {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+      }
+
+      .top-brand-btn {
+        background: none;
+        border: none;
+        padding: 0;
+        color: #e2e8f0;
+        font-family: var(--font-display);
+        font-size: 1.125rem;
+        font-weight: 600;
+        letter-spacing: 0.025em;
+        cursor: pointer;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: color 180ms ease;
+      }
+
+      @media (min-width: 640px) {
+        .top-brand-btn {
+          font-size: 1.25rem;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .top-brand-btn {
+          font-size: 1.5rem;
+        }
+      }
+
+      .top-brand-btn:hover {
+        color: var(--accent-red-soft);
+      }
+
+      .top-links {
+        display: none;
+        align-items: center;
+        gap: 24px;
+      }
+
+      @media (min-width: 768px) {
+        .top-links {
+          display: flex;
+        }
+      }
+
+      .top-link {
+        background: none;
+        border: none;
+        padding: 4px 0;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        cursor: pointer;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: color 180ms ease;
+      }
+
+      .top-link:hover {
+        color: #f8fafc;
+      }
+
+      .top-link.is-active {
+        color: var(--accent-red-soft);
+        text-decoration: underline;
+        text-decoration-color: rgba(239, 68, 68, 0.7);
+        text-underline-offset: 8px;
+      }
+
+      /* Shared Buttons & Cards */
+      .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 42px;
+        padding: 9px 16px;
+        border-radius: 10px;
+        border: 1px solid var(--border-hairline);
+        background: rgba(11, 14, 23, 0.82);
+        color: #f1f5f9;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+      }
+
+      .btn-secondary:hover {
+        border-color: rgba(255, 255, 255, 0.28);
+        background: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
+      }
+
+      .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 46px;
+        padding: 11px 22px;
+        border-radius: 11px;
+        border: 1px solid rgba(239, 68, 68, 0.55);
+        background: rgba(239, 68, 68, 0.16);
+        color: #ffffff;
+        font-family: var(--font-display);
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: background-color 180ms ease, border-color 180ms ease;
+      }
+
+      .btn-primary:hover {
+        background: rgba(239, 68, 68, 0.28);
+        border-color: rgba(239, 68, 68, 0.8);
+      }
+
+      .btn-ghost {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 40px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: color 180ms ease;
+      }
+
+      .btn-ghost:hover {
+        color: #ffffff;
+      }
+
+      .page-center {
+        position: relative;
+        z-index: 10;
+        width: 100%;
+        max-width: 672px;
+        margin: auto;
+        padding: 36px 0;
+      }
+
+      .page-center.is-wide {
+        max-width: 960px;
+      }
+
+      .page-center.is-contact {
+        max-width: 540px;
+        margin: auto 0;
+      }
+
+      .page-center.is-skeleton {
+        max-width: 1380px;
+        padding: 20px 0 28px;
+      }
+
+      .contact-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 16px 18px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(7, 9, 14, 0.78);
+      }
+
+      .contact-link {
+        display: inline-block;
+        margin-top: 4px;
+        color: #f8fafc;
+        font-family: var(--font-mono);
+        font-size: 0.96rem;
+        font-weight: 500;
+        text-decoration: none;
+        word-break: break-word;
+      }
+
+      .contact-link:hover {
+        color: var(--accent-cyan);
+        text-decoration: underline;
+        text-underline-offset: 4px;
+      }
+
+      #contact-astronaut-img {
+        filter: drop-shadow(0 0 22px rgba(56, 189, 248, 0.22));
+      }
+
+      .glass-panel {
+        width: 100%;
+        border-radius: 16px;
+        border: 1px solid var(--border-hairline);
+        background: var(--bg-panel);
+        backdrop-filter: blur(14px);
+        padding: 28px;
+      }
+
+      @media (min-width: 640px) {
+        .glass-panel {
+          padding: 40px;
+        }
+      }
+
+      .pop-animate {
+        animation: popIn 220ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .panel-index {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 0.875rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: var(--accent-red);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .panel-title {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: 1.875rem;
+        font-weight: 700;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        color: #ffffff;
+        text-wrap: balance;
+      }
+
+      .panel-header-row + .panel-title {
+        margin-top: 12px;
+      }
+
+      @media (min-width: 640px) {
+        .panel-title {
+          font-size: 2.25rem;
+        }
+      }
+
+      .panel-subtitle {
+        margin: 10px 0 0;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: var(--text-secondary);
+      }
+
+      .panel-divider {
+        margin-top: 28px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      /* Role Selection Cards (Astronaut vs Doctor) */
+      .role-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      @media (min-width: 640px) {
+        .role-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      .role-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 156px;
+        padding: 24px;
+        border-radius: 12px;
+        border: 1px solid var(--border-hairline);
+        background: rgba(7, 9, 14, 0.86);
+        text-align: left;
+        cursor: pointer;
+        transition:
+          border-color 180ms ease,
+          background-color 180ms ease,
+          box-shadow 180ms ease;
+      }
+
+      .role-card.role-astronaut:hover {
+        border-color: var(--border-red);
+        background: #111726;
+        box-shadow: 0 0 24px rgba(239, 68, 68, 0.16);
+      }
+
+      .role-card.role-doctor:hover {
+        border-color: var(--border-cyan);
+        background: #111726;
+        box-shadow: 0 0 24px rgba(6, 182, 212, 0.16);
+      }
+
+      .role-card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+      }
+
+      .role-card h2 {
+        margin: 22px 0 6px;
+        font-family: var(--font-display);
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #ffffff;
+      }
+
+      .role-card p {
+        margin: 0;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        color: var(--text-muted);
+      }
+
+      /* Sign-In Form & Tabs */
+      .panel-header-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .tab-group {
+        display: inline-flex;
+        gap: 4px;
+        padding: 4px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(7, 9, 14, 0.82);
+      }
+
+      .tab-btn {
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background-color 150ms ease, color 150ms ease;
+      }
+
+      .tab-btn.is-active {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ffffff;
+      }
+
+      .form-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .form-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      @media (min-width: 640px) {
+        .form-grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      .field-label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .field-label span {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+      }
+
+      .field-input {
+        min-height: 44px;
+        padding: 9px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border-hairline);
+        background: var(--bg-input);
+        color: #ffffff;
+        font-size: 0.875rem;
+        transition: border-color 150ms ease;
+      }
+
+      .field-input:focus {
+        outline: none;
+        border-color: var(--border-red);
+      }
+
+      .error-box {
+        margin-top: 18px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        border: 1px solid rgba(239, 68, 68, 0.45);
+        background: rgba(239, 68, 68, 0.12);
+        color: #fecaca;
+        font-size: 0.875rem;
+      }
+
+      .actions-col {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 6px;
+      }
+
+      .actions-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-top: 6px;
+      }
+
+      .actions-group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .meta-line {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
+
+      .page-mobile-footer {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      @media (min-width: 768px) {
+        .page-mobile-footer {
+          display: none;
+        }
+      }
+
+      .icon {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+
+      .icon-lg {
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+      }
+
+      .text-red { color: var(--accent-red-soft); }
+      .text-cyan { color: var(--accent-cyan); }
+      .w-full { width: 100%; }
+
+      /* Coach AI-Model Split Telemetry Layout */
+      .coach-split {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 28px;
+        align-items: start;
+      }
+
+      @media (min-width: 820px) {
+        .coach-split {
+          grid-template-columns: 1fr 1fr;
+          gap: 32px;
+        }
+      }
+
+      .coach-subpanel {
+        padding: 22px;
+        border-radius: 12px;
+        border: 1px solid var(--border-hairline);
+        background: rgba(7, 9, 14, 0.72);
+      }
+
+      .preset-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .preset-btn {
+        padding: 6px 11px;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-secondary);
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
+      }
+
+      .preset-btn:hover {
+        border-color: rgba(255, 255, 255, 0.28);
+        background: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
+      }
+
+      .field-hint {
+        margin: 0;
+        font-size: 0.75rem;
+        line-height: 1.45;
+        color: var(--text-muted);
+      }
+
+      .mono-val {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .metric-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 20px;
+        padding-top: 18px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .metric-label {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+      }
+
+      .metric-number {
+        margin: 6px 0 0;
+        font-family: var(--font-mono);
+        font-size: 1.5rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        color: #ffffff;
+      }
+
+      .metric-unit {
+        margin-left: 4px;
+        font-size: 0.75rem;
+        font-weight: 400;
+        color: var(--text-muted);
+      }
+
+      .status-line {
+        margin: 8px 0 0;
+        font-family: var(--font-display);
+        font-size: 1.65rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+
+      .status-normal { color: #34d399; }
+      .status-osteopenia { color: #fbbf24; }
+      .status-osteoporosis { color: #f87171; }
+
+      .conf-track {
+        margin-top: 10px;
+        height: 4px;
+        width: 100%;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+      }
+
+      .conf-fill {
+        height: 100%;
+        background: var(--accent-cyan);
+        transition: width 220ms ease;
+      }
+
+      .rec-block {
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .rec-text {
+        margin: 8px 0 0;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        color: #f1f5f9;
+      }
+
+      .history-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      .history-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+        text-align: left;
+      }
+
+      .history-table th {
+        padding: 8px 10px 10px 0;
+        font-size: 0.72rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        white-space: nowrap;
+      }
+
+      .history-table td {
+        padding: 10px 10px 10px 0;
+        color: var(--text-secondary);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        white-space: nowrap;
+      }
+
+      .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: wait;
+      }
+
+      /* 01 · My Skeleton 3D Workbench & Inspector (No backdrop-blur over WebGL) */
+      .skel-shell {
+        width: 100%;
+        border-radius: 16px;
+        border: 1px solid var(--border-hairline);
+        background: rgba(8, 11, 18, 0.94);
+        padding: 20px 22px 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .skel-topbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .skel-title-row {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+      }
+
+      .skel-heading {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: clamp(1.65rem, 2.6vw, 2.2rem);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: #ffffff;
+      }
+
+      .skel-submeta {
+        margin: 6px 0 0;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+      }
+
+      .skel-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .skel-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        min-height: 36px;
+        padding: 7px 13px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(15, 23, 42, 0.9);
+        color: var(--text-secondary);
+        font-size: 0.78rem;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+      }
+
+      .skel-btn:hover {
+        border-color: rgba(255, 255, 255, 0.3);
+        color: #ffffff;
+      }
+
+      .skel-btn.is-cyan {
+        border-color: rgba(34, 211, 238, 0.55);
+        background: rgba(6, 182, 212, 0.16);
+        color: #67e8f9;
+      }
+
+      .skel-btn.is-scan {
+        border-color: rgba(34, 211, 238, 0.7);
+        background: #0891b2;
+        color: #ffffff;
+        font-weight: 600;
+      }
+
+      .skel-btn.is-scan:hover {
+        background: #06b6d4;
+      }
+
+      .skel-workspace {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        align-items: stretch;
+      }
+
+      @media (min-width: 1024px) {
+        .skel-workspace {
+          grid-template-columns: minmax(0, 1.45fr) 410px;
+        }
+      }
+
+      .skel-viewport-wrap {
+        position: relative;
+        min-height: 540px;
+        height: 620px;
+        border-radius: 12px;
+        border: 1px solid rgba(34, 211, 238, 0.18);
+        background: #060911;
+        overflow: hidden;
+      }
+
+      .skel-canvas-mount {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .skel-canvas-mount canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        outline: none;
+      }
+
+      .skel-hud-card {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        z-index: 4;
+        max-width: 310px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(8, 12, 22, 0.9);
+        pointer-events: auto;
+      }
+
+      .skel-hud-stats {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: #22d3ee;
+      }
+
+      .skel-hud-note {
+        margin: 6px 0 0;
+        font-size: 0.75rem;
+        line-height: 1.45;
+        color: var(--text-secondary);
+      }
+
+      .skel-hud-legend {
+        margin: 6px 0 0;
+        font-size: 0.72rem;
+        line-height: 1.45;
+        color: var(--text-muted);
+      }
+
+      .skel-hud-btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 10px;
+      }
+
+      .skel-dock-wrap {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        z-index: 4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        pointer-events: none;
+      }
+
+      .skel-dock-toggle {
+        pointer-events: auto;
+        padding: 4px 12px;
+        border-radius: 6px 6px 0 0;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-bottom: none;
+        background: rgba(8, 12, 22, 0.92);
+        color: var(--text-secondary);
+        font-size: 0.7rem;
+        cursor: pointer;
+      }
+
+      .skel-dock {
+        pointer-events: auto;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        max-width: 100%;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(8, 12, 22, 0.94);
+      }
+
+      .skel-dock.is-hidden {
+        display: none;
+      }
+
+      .skel-dock-sep {
+        width: 1px;
+        height: 20px;
+        background: rgba(255, 255, 255, 0.12);
+        margin: 0 2px;
+      }
+
+      .skel-chip {
+        padding: 5px 10px;
+        border-radius: 6px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--text-muted);
+        font-size: 0.74rem;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease;
+      }
+
+      .skel-chip:hover {
+        color: #f8fafc;
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .skel-chip.is-active {
+        color: #67e8f9;
+        border-color: rgba(34, 211, 238, 0.5);
+        background: rgba(6, 182, 212, 0.16);
+      }
+
+      .skel-tooltip {
+        position: absolute;
+        z-index: 6;
+        pointer-events: none;
+        padding: 7px 10px;
+        border-radius: 7px;
+        border: 1px solid rgba(34, 211, 238, 0.45);
+        background: rgba(6, 9, 17, 0.96);
+        font-size: 0.74rem;
+        color: #f8fafc;
+        white-space: nowrap;
+      }
+
+      .skel-tooltip[hidden] {
+        display: none;
+      }
+
+      .skel-drawer {
+        border-radius: 12px;
+        border: 1px solid var(--border-hairline);
+        background: #0a0f1c;
+        display: flex;
+        flex-direction: column;
+        height: 620px;
+        overflow: hidden;
+      }
+
+      .skel-drawer-tabs {
+        display: flex;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(6, 9, 17, 0.85);
+      }
+
+      .skel-drawer-tab {
+        flex: 1;
+        padding: 12px 10px;
+        border: none;
+        border-bottom: 2px solid transparent;
+        background: transparent;
+        color: var(--text-muted);
+        font-size: 0.76rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      .skel-drawer-tab.is-active {
+        color: #22d3ee;
+        border-bottom-color: #22d3ee;
+        background: rgba(6, 182, 212, 0.08);
+      }
+
+      .skel-drawer-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .skel-selected-box {
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(34, 211, 238, 0.25);
+        background: rgba(6, 10, 20, 0.9);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .skel-selected-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .skel-selected-name {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: 0.98rem;
+        font-weight: 600;
+        color: #ffffff;
+      }
+
+      .skel-color-code {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .skel-swatch {
+        width: 9px;
+        height: 9px;
+        border-radius: 2px;
+        display: inline-block;
+        flex-shrink: 0;
+      }
+
+      .skel-slider-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .skel-slider-row input[type="range"] {
+        flex: 1;
+        accent-color: #22d3ee;
+        cursor: pointer;
+      }
+
+      .skel-metrics-mini {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .skel-metric-mini p {
+        margin: 0;
+      }
+
+      .skel-metric-mini .lbl {
+        font-size: 0.66rem;
+        color: var(--text-muted);
+      }
+
+      .skel-metric-mini .val {
+        margin-top: 2px;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        font-variant-numeric: tabular-nums;
+        color: #f8fafc;
+      }
+
+      .skel-bone-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .skel-bone-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 68px 62px;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(7, 10, 18, 0.75);
+        cursor: pointer;
+        transition: border-color 140ms ease, background-color 140ms ease;
+      }
+
+      .skel-bone-row:hover {
+        border-color: rgba(255, 255, 255, 0.22);
+      }
+
+      .skel-bone-row.is-selected {
+        border-color: rgba(34, 211, 238, 0.65);
+        background: rgba(6, 182, 212, 0.09);
+      }
+
+      .skel-bone-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        font-size: 0.76rem;
+        color: #e2e8f0;
+      }
+
+      .skel-bone-label span:last-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .skel-pct-wrap {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .skel-pct-input {
+        width: 52px;
+        height: 28px;
+        padding: 2px 6px;
+        border-radius: 5px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: #060911;
+        color: #ffffff;
+        font-family: var(--font-mono);
+        font-size: 0.74rem;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .skel-pct-input:focus {
+        outline: none;
+        border-color: #22d3ee;
+      }
+
+      .skel-sensor-card {
+        padding: 9px 11px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(7, 10, 18, 0.75);
+        cursor: pointer;
+      }
+
+      .skel-sensor-card:hover {
+        border-color: rgba(34, 211, 238, 0.35);
+      }
+
+      .skel-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(4, 7, 13, 0.84);
+      }
+
+      .skel-modal-backdrop[hidden] {
+        display: none;
+      }
+
+      .skel-modal {
+        width: 100%;
+        max-width: 640px;
+        border-radius: 14px;
+        border: 1px solid rgba(34, 211, 238, 0.3);
+        background: #0b101d;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .skel-textarea {
+        width: 100%;
+        min-height: 170px;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: #060911;
+        color: #f8fafc;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        line-height: 1.5;
+        resize: vertical;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Stationary Space Background (Earth, Stars, Milky Way never move) -->
+    <div aria-hidden="true" class="space-backdrop">
+      <img id="orbit-backdrop-img" alt="" referrerpolicy="no-referrer" />
+      <div class="space-scrim-left"></div>
+      <div id="page-scrim" class="space-scrim-page"></div>
+    </div>
+
+    <div class="app-stage">
+      <!-- =================================================================== -->
+      <!-- MAIN ORBIT PAGE                                                     -->
+      <!-- =================================================================== -->
+      <main id="view-orbit" class="view">
+        <!-- Independently Floating Astronaut -->
+        <div class="astronaut-anchor">
+          <div class="astronaut-float">
+            <img
+              id="astronaut-img"
+              alt="Astronaut floating above Earth holding his leg with glowing red osteoporotic bone loss"
+              referrerpolicy="no-referrer"
+            />
+          </div>
+        </div>
+
+        <!-- Top-Left Brand + Big White Welcome -->
+        <header class="orbit-header">
+          <p class="brand-title">Mascu-Skeletal Diagnosis</p>
+          <div class="welcome-wrap">
+            <h1 class="welcome-heading">Welcome</h1>
+          </div>
+        </header>
+
+        <!-- Bottom-Left 4 Mission Navigation Buttons -->
+        <nav aria-label="Mission Navigation" class="orbit-nav">
+          <button type="button" class="mission-btn" data-route="signin">
+            <span class="mission-btn-left">
+              <span class="mission-label">Sign In</span>
+            </span>
+            <svg class="mission-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14"></path>
+              <path d="m12 5 7 7-7 7"></path>
+            </svg>
+          </button>
+
+          <button type="button" class="mission-btn" data-route="skeletons">
+            <span class="mission-btn-left">
+              <span class="mission-label">My Skeleton</span>
+            </span>
+            <svg class="mission-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14"></path>
+              <path d="m12 5 7 7-7 7"></path>
+            </svg>
+          </button>
+
+          <button type="button" class="mission-btn" data-route="coach">
+            <span class="mission-btn-left">
+              <span class="mission-label">Coach AI-Model</span>
+            </span>
+            <svg class="mission-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14"></path>
+              <path d="m12 5 7 7-7 7"></path>
+            </svg>
+          </button>
+
+          <button type="button" class="mission-btn" data-route="approval">
+            <span class="mission-btn-left">
+              <span class="mission-label">Doctor Approval</span>
+            </span>
+            <svg class="mission-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14"></path>
+              <path d="m12 5 7 7-7 7"></path>
+            </svg>
+          </button>
+
+          <button type="button" class="mission-btn" data-route="doctors">
+            <span class="mission-btn-left">
+              <span class="mission-label">Doctors Review</span>
+            </span>
+            <svg class="mission-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14"></path>
+              <path d="m12 5 7 7-7 7"></path>
+            </svg>
+          </button>
+
+          <button type="button" class="mission-btn" data-route="contact">
+            <span class="mission-btn-left">
+              <span class="mission-label">Contact Us</span>
+            </span>
+            <svg class="mission-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14"></path>
+              <path d="m12 5 7 7-7 7"></path>
+            </svg>
+          </button>
+        </nav>
+      </main>
+
+      <!-- =================================================================== -->
+      <!-- INNER MODULE PAGES (00 Sign In, 01 Skeleton, 02 Coach, 03 Approval, 04 Doctors, 05 Contact)-->
+      <!-- =================================================================== -->
+      <section id="view-module" class="view" hidden>
+        <!-- Independently Floating Thumbs-Up Astronaut for Contact Us Page -->
+        <div id="contact-astronaut-anchor" class="astronaut-anchor" hidden>
+          <div class="astronaut-float">
+            <img
+              id="contact-astronaut-img"
+              alt="Astronaut floating above Earth giving a thumbs-up like sign"
+              referrerpolicy="no-referrer"
+            />
+          </div>
+        </div>
+
+        <header id="page-topbar" class="page-topbar">
+          <button type="button" class="top-brand-btn" data-route="orbit">
+            Mascu-Skeletal Diagnosis
+          </button>
+        </header>
+
+        <div id="module-body" class="page-center"></div>
+      </section>
+    </div>
+
+    <script>
+      (function () {
+        // Resolve image paths automatically whether opened directly (file://) or via Vite (http/https)
+        var assetBase = window.location.protocol === 'file:' ? './public/assets' : './assets';
+        var backdropImg = document.getElementById('orbit-backdrop-img');
+        var astronautImg = document.getElementById('astronaut-img');
+        var contactAstronautAnchor = document.getElementById('contact-astronaut-anchor');
+        var contactAstronautImg = document.getElementById('contact-astronaut-img');
+
+        backdropImg.src = assetBase + '/orbit_space_backdrop.jpg';
+        backdropImg.onerror = function () {
+          backdropImg.style.display = 'none';
+        };
+
+        astronautImg.src = assetBase + '/floating_astronaut.png';
+        astronautImg.onerror = function () {
+          astronautImg.style.display = 'none';
+        };
+
+        contactAstronautImg.src = assetBase + '/astronaut_like.png';
+        contactAstronautImg.onerror = function () {
+          contactAstronautImg.style.display = 'none';
+        };
+
+        var vendorBase = window.location.protocol === 'file:' ? './public/vendor' : './vendor';
+
+        var MODULES = {
+          signin: { index: '00', label: 'Sign In', hash: '#sign-in' },
+          skeletons: { index: '01', label: 'My Skeleton', hash: '#my-skeleton' },
+          coach: { index: '02', label: 'Coach AI-Model', hash: '#coach-ai-model' },
+          approval: { index: '03', label: 'Doctor Approval', hash: '#doctor-approval' },
+          doctors: { index: '04', label: 'Doctors Review', hash: '#doctors-review' },
+          contact: { index: '05', label: 'Contact Us', hash: '#contact-us' },
+        };
+
+        var ASTRONAUT_SPECIALTIES = [
+          'Mission Commander',
+          'Flight Engineer',
+          'Payload Specialist',
+        ];
+        var DOCTOR_SPECIALTIES = ['Flight Surgeon', 'Orthopedic Specialist'];
+
+        var DEFAULT_API_BASE =
+          window.location.protocol === 'file:' ? 'http://127.0.0.1:5000' : '';
+
+        function storageGet(key, fallback) {
+          try {
+            var val = window.localStorage.getItem(key);
+            return val !== null ? val : fallback;
+          } catch (e) {
+            return fallback;
+          }
+        }
+
+        function storageSet(key, val) {
+          try {
+            if (val === null || val === undefined) {
+              window.localStorage.removeItem(key);
+            } else {
+              window.localStorage.setItem(key, val);
+            }
+          } catch (e) {}
+        }
+
+        function loadSavedUser() {
+          try {
+            var raw = window.localStorage.getItem('msd_session_user');
+            return raw ? JSON.parse(raw) : null;
+          } catch (e) {
+            return null;
+          }
+        }
+
+        var state = {
+          route: getRouteFromHash(window.location.hash),
+          selectedRole: null, // 'astronaut' | 'doctor' | null
+          authMode: 'signin', // 'signin' | 'register'
+          authLoading: false,
+          authToken: storageGet('msd_auth_token', null),
+          sessionUser: loadSavedUser(),
+          apiBase: storageGet('msd_api_base', DEFAULT_API_BASE),
+          errorMessage: null,
+          coachSos: '1515.0',
+          coachBua: '58.0',
+          coachAstronautId: '',
+          coachLoading: false,
+          coachError: null,
+          coachResult: null,
+          coachHistory: [],
+          scansLoadedForToken: null,
+          doctorScans: [],
+          doctorLoading: false,
+          doctorError: null,
+          doctorLoadedForToken: null,
+          // 01 · My Skeleton 3D Workbench State
+          skelViewMode: 'xray', // 'full' | 'xray' | 'exploded'
+          skelPreset: 'full-body',
+          skelDrawerTab: 'bones', // 'bones' | 'sensors'
+          skelSelectedBone: 'femur-right',
+          skelSelectedSensor: null,
+          skelDockCollapsed: false,
+          skelDatasetModalOpen: false,
+          skelDatasetDraft: '',
+          skelDatasetError: null,
+          skelWeakness: {}, // { [boneId]: number | null }
+          skelCustomMetrics: {}, // { [boneId]: { sos, bua } }
+        };
+
+        var viewOrbit = document.getElementById('view-orbit');
+        var viewModule = document.getElementById('view-module');
+        var pageScrim = document.getElementById('page-scrim');
+        var moduleBody = document.getElementById('module-body');
+
+        function getRouteFromHash(hash) {
+          for (var key in MODULES) {
+            if (MODULES[key].hash === hash) return key;
+          }
+          return 'orbit';
+        }
+
+        function escapeHtml(str) {
+          return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+        }
+
+        function normalizeApiBase(rawUrl) {
+          var clean = String(rawUrl || '').trim().replace(/\/+$/, '');
+          if (clean.endsWith('/predict-colab')) {
+            clean = clean.slice(0, -'/predict-colab'.length);
+          } else if (clean.endsWith('/predict')) {
+            clean = clean.slice(0, -'/predict'.length);
+          }
+          return clean;
+        }
+
+        function setApiBase(rawUrl) {
+          var normalized = normalizeApiBase(rawUrl);
+          state.apiBase = normalized;
+          storageSet('msd_api_base', normalized);
+          return normalized;
+        }
+
+        function setAuthSession(token, user) {
+          state.authToken = token || null;
+          state.sessionUser = user || null;
+          storageSet('msd_auth_token', token || null);
+          storageSet('msd_session_user', user ? JSON.stringify(user) : null);
+          if (!token) {
+            state.scansLoadedForToken = null;
+            state.doctorLoadedForToken = null;
+            state.coachHistory = [];
+            state.doctorScans = [];
+          }
+        }
+
+        function apiFetch(path, options) {
+          var opts = options || {};
+          var base = normalizeApiBase(state.apiBase);
+          var url = base + path;
+          var headers = {
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true',
+          };
+          if (state.authToken) {
+            headers['Authorization'] = 'Bearer ' + state.authToken;
+          }
+
+          return fetch(url, {
+            method: opts.method || 'GET',
+            headers: headers,
+            body: opts.body ? JSON.stringify(opts.body) : undefined,
+          })
+            .catch(function () {
+              var displayBase = base || window.location.origin;
+              throw new Error(
+                'Could not reach the backend server at "' +
+                  displayBase +
+                  '". Start backend/colab_server.py in Google Colab (and paste its base Ngrok URL) or run backend/app.py locally.'
+              );
+            })
+            .then(function (res) {
+              return res.text().then(function (text) {
+                var parsed = null;
+                try {
+                  parsed = JSON.parse(text);
+                } catch (e) {
+                  throw new Error(
+                    'Server returned a non-JSON response (HTTP ' +
+                      res.status +
+                      '). Verify your Backend URL points to the Flask server root.'
+                  );
+                }
+                if (!res.ok) {
+                  if (res.status === 401 && opts.clearOnUnauthorized) {
+                    setAuthSession(null, null);
+                  }
+                  throw new Error(
+                    (parsed && parsed.error) || 'Server returned HTTP ' + res.status
+                  );
+                }
+                return parsed;
+              });
+            });
+        }
+
+        function syncHash(route) {
+          var targetHash = route === 'orbit' ? '#orbit' : MODULES[route].hash;
+          if (window.location.hash !== targetHash) {
+            try {
+              window.history.pushState(null, '', targetHash);
+            } catch (e) {
+              window.location.hash = targetHash;
+            }
+          }
+        }
+
+        function navigateTo(route) {
+          state.route = route;
+          state.errorMessage = null;
+          syncHash(route);
+          render();
+        }
+
+        window.addEventListener('hashchange', function () {
+          state.route = getRouteFromHash(window.location.hash);
+          render();
+        });
+
+        document.addEventListener('click', function (e) {
+          var routeBtn = e.target.closest('[data-route]');
+          if (routeBtn) {
+            navigateTo(routeBtn.getAttribute('data-route'));
+          }
+        });
+
+        // Verify saved JWT session on startup if one exists
+        if (state.authToken) {
+          apiFetch('/auth/me', { clearOnUnauthorized: true })
+            .then(function (user) {
+              setAuthSession(state.authToken, user);
+              render();
+            })
+            .catch(function () {
+              render();
+            });
+        }
+
+        function renderSignInContent() {
+          // Step 1: Role selection gate (Astronaut or Doctor) BEFORE the sign-in pop-out
+          if (!state.sessionUser && !state.selectedRole) {
+            return (
+              '<div class="glass-panel pop-animate">' +
+                '<h1 class="panel-title">Sign in as Astronaut or Doctor</h1>' +
+                '<p class="panel-subtitle">Choose your role before proceeding to sign in.</p>' +
+                '<div class="panel-divider role-grid">' +
+                  '<button type="button" class="role-card role-astronaut" id="choose-astronaut">' +
+                    '<div class="role-card-top">' +
+                      '<svg class="icon-lg text-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+                        '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>' +
+                        '<path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>' +
+                        '<path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path>' +
+                        '<path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path>' +
+                      '</svg>' +
+                      '<svg class="icon" style="color:#64748b" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>' +
+                    '</div>' +
+                    '<div>' +
+                      '<h2>Astronaut</h2>' +
+                      '<p>Access personal skeletal scans and AI countermeasure coaching.</p>' +
+                    '</div>' +
+                  '</button>' +
+                  '<button type="button" class="role-card role-doctor" id="choose-doctor">' +
+                    '<div class="role-card-top">' +
+                      '<svg class="icon-lg text-cyan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+                        '<path d="M11 2v2"></path><path d="M5 2v2"></path><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1"></path>' +
+                        '<path d="M8 15a6 6 0 0 0 12 0v-3"></path><circle cx="20" cy="10" r="2"></circle>' +
+                      '</svg>' +
+                      '<svg class="icon" style="color:#64748b" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>' +
+                    '</div>' +
+                    '<div>' +
+                      '<h2>Doctor</h2>' +
+                      '<p>Review crew bone density data and approve orbital medical clearance.</p>' +
+                    '</div>' +
+                  '</button>' +
+                '</div>' +
+                '<div class="panel-divider">' +
+                  '<button type="button" class="btn-secondary" data-route="orbit">' +
+                    '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>' +
+                    'Back to orbit' +
+                  '</button>' +
+                '</div>' +
+              '</div>'
+            );
+          }
+
+          // Step 2: Role-Tailored Sign-In / Registration Pop-Out
+          if (!state.sessionUser && state.selectedRole) {
+            var isDoc = state.selectedRole === 'doctor';
+            var isReg = state.authMode === 'register';
+
+            return (
+              '<div class="glass-panel pop-animate" style="max-width:576px;margin:0 auto;">' +
+                '<div class="panel-header-row">' +
+                  '<div class="meta-line">' +
+                    '<span style="color:#e2e8f0;font-weight:500;">' + (isDoc ? 'Doctor Portal' : 'Astronaut Portal') + '</span>' +
+                  '</div>' +
+                  '<div class="tab-group">' +
+                    '<button type="button" id="tab-signin" class="tab-btn ' + (!isReg ? 'is-active' : '') + '">Sign In</button>' +
+                    '<button type="button" id="tab-register" class="tab-btn ' + (isReg ? 'is-active' : '') + '">Create Account</button>' +
+                  '</div>' +
+                '</div>' +
+                '<h1 class="panel-title">' +
+                  (isReg
+                    ? 'Register ' + (isDoc ? 'Doctor' : 'Astronaut')
+                    : 'Sign In as ' + (isDoc ? 'Doctor' : 'Astronaut')) +
+                '</h1>' +
+                '<p class="panel-subtitle">' +
+                  (isDoc
+                    ? 'Sign in with your medical account or register to inspect crew scans.'
+                    : 'Sign in with your astronaut account or register to log bone density scans.') +
+                '</p>' +
+                (state.errorMessage
+                  ? '<div role="alert" class="error-box">' + escapeHtml(state.errorMessage) + '</div>'
+                  : '') +
+                '<form id="auth-form" class="panel-divider form-stack">' +
+                  (isReg
+                    ? '<div class="form-grid-2">' +
+                        '<label class="field-label"><span>Full Name</span><input id="inp-name" type="text" required placeholder="' + (isDoc ? 'Dr. Aris Thorne' : 'Elena Vance') + '" class="field-input" /></label>' +
+                        '<label class="field-label"><span>' + (isDoc ? 'Medical License ID' : 'Mission Badge ID') + '</span><input id="inp-badge" type="text" placeholder="' + (isDoc ? 'MED-402' : 'VANCE-01') + '" class="field-input" /></label>' +
+                      '</div>'
+                    : '') +
+                  '<label class="field-label"><span>Email Address</span><input id="inp-email" type="email" required placeholder="' + (isDoc ? 'doctor@orbital-med.org' : 'astronaut@mission.org') + '" class="field-input" /></label>' +
+                  '<label class="field-label"><span>Password (8+ characters)</span><input id="inp-password" type="password" required minlength="8" placeholder="Minimum 8 characters" class="field-input" /></label>' +
+                  '<label class="field-label"><span>Backend Server URL</span><input id="inp-auth-base" type="text" value="' + escapeHtml(state.apiBase) + '" placeholder="https://xxxx.ngrok-free.app or http://127.0.0.1:5000" class="field-input mono-val" /></label>' +
+                  '<div class="actions-col">' +
+                    '<button type="submit" class="btn-primary w-full"' + (state.authLoading ? ' disabled' : '') + '>' +
+                      (state.authLoading
+                        ? (isReg ? 'Creating Account...' : 'Signing In...')
+                        : (isReg ? 'Create Account' : 'Sign In')) +
+                    '</button>' +
+                    '<div class="actions-row">' +
+                      '<button type="button" id="btn-change-role" class="btn-ghost">' +
+                        '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>' +
+                        'Change role' +
+                      '</button>' +
+                      '<button type="button" class="btn-ghost" data-route="orbit">Back to orbit</button>' +
+                    '</div>' +
+                  '</div>' +
+                '</form>' +
+              '</div>'
+            );
+          }
+
+          // Step 3: Signed-In Account Card
+          var u = state.sessionUser;
+          var isDoctorUser = u.role === 'doctor';
+          return (
+            '<div class="glass-panel pop-animate" style="max-width:576px;margin:0 auto;">' +
+              '<h1 class="panel-title">' + (isDoctorUser ? 'Doctor Account' : 'Astronaut Account') + '</h1>' +
+              '<p class="panel-subtitle">Authenticated via SQLite + JWT session on the active backend.</p>' +
+              (state.errorMessage
+                ? '<div role="alert" class="error-box">' + escapeHtml(state.errorMessage) + '</div>'
+                : '') +
+              '<div class="panel-divider form-stack">' +
+                '<div class="meta-line">' +
+                  '<span>' + escapeHtml(isDoctorUser ? 'Doctor' : 'Astronaut') + '</span>' +
+                  '<span aria-hidden="true">·</span>' +
+                  '<span>' + escapeHtml(u.email) + '</span>' +
+                  (u.badge_id
+                    ? '<span aria-hidden="true">·</span><span class="mono-val">' + escapeHtml(u.badge_id) + '</span>'
+                    : '') +
+                  '<span aria-hidden="true">·</span>' +
+                  '<span class="mono-val">ID #' + escapeHtml(u.id) + '</span>' +
+                '</div>' +
+                '<div class="form-grid-2">' +
+                  '<div class="coach-subpanel">' +
+                    '<p class="metric-label">Full Name</p>' +
+                    '<p class="rec-text" style="font-weight:600;">' + escapeHtml(u.full_name) + '</p>' +
+                  '</div>' +
+                  '<div class="coach-subpanel">' +
+                    '<p class="metric-label">Role &amp; Badge</p>' +
+                    '<p class="rec-text mono-val">' + escapeHtml(u.role) + ' · ' + escapeHtml(u.badge_id || 'Unassigned') + '</p>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="actions-row">' +
+                  '<div class="actions-group">' +
+                    '<button type="button" class="btn-primary" data-route="coach">Coach AI-Model</button>' +
+                    '<button type="button" class="btn-secondary" data-route="' + (isDoctorUser ? 'doctors' : 'skeletons') + '">' +
+                      (isDoctorUser ? 'Doctors Review' : 'My Skeleton') +
+                    '</button>' +
+                  '</div>' +
+                  '<button type="button" id="btn-signout" class="btn-secondary">Sign out</button>' +
+                '</div>' +
+              '</div>' +
+            '</div>'
+          );
+        }
+
+        function attachSignInHandlers() {
+          var btnAst = document.getElementById('choose-astronaut');
+          if (btnAst) {
+            btnAst.onclick = function () {
+              state.selectedRole = 'astronaut';
+              state.errorMessage = null;
+              render();
+            };
+          }
+
+          var btnDoc = document.getElementById('choose-doctor');
+          if (btnDoc) {
+            btnDoc.onclick = function () {
+              state.selectedRole = 'doctor';
+              state.errorMessage = null;
+              render();
+            };
+          }
+
+          var tabSignIn = document.getElementById('tab-signin');
+          if (tabSignIn) {
+            tabSignIn.onclick = function () {
+              state.authMode = 'signin';
+              state.errorMessage = null;
+              render();
+            };
+          }
+
+          var tabReg = document.getElementById('tab-register');
+          if (tabReg) {
+            tabReg.onclick = function () {
+              state.authMode = 'register';
+              state.errorMessage = null;
+              render();
+            };
+          }
+
+          var btnChangeRole = document.getElementById('btn-change-role');
+          if (btnChangeRole) {
+            btnChangeRole.onclick = function () {
+              state.selectedRole = null;
+              state.errorMessage = null;
+              render();
+            };
+          }
+
+          var authForm = document.getElementById('auth-form');
+          if (authForm) {
+            authForm.onsubmit = function (e) {
+              e.preventDefault();
+              var emailVal = (document.getElementById('inp-email').value || '').trim().toLowerCase();
+              var passVal = document.getElementById('inp-password').value || '';
+              var baseVal = (document.getElementById('inp-auth-base').value || '').trim();
+              setApiBase(baseVal || DEFAULT_API_BASE);
+
+              if (!emailVal || passVal.length < 8) {
+                state.errorMessage =
+                  'Enter a valid email address and a password of at least 8 characters.';
+                render();
+                return;
+              }
+
+              var path = state.authMode === 'register' ? '/auth/register' : '/auth/login';
+              var payload = { email: emailVal, password: passVal };
+
+              if (state.authMode === 'register') {
+                var fullName = (document.getElementById('inp-name').value || '').trim();
+                var badgeId = (document.getElementById('inp-badge').value || '').trim();
+                if (!fullName) {
+                  state.errorMessage = 'Full name is required to create an account.';
+                  render();
+                  return;
+                }
+                payload.full_name = fullName;
+                payload.role = state.selectedRole;
+                payload.badge_id = badgeId || null;
+              }
+
+              state.authLoading = true;
+              state.errorMessage = null;
+              render();
+
+              apiFetch(path, { method: 'POST', body: payload })
+                .then(function (data) {
+                  state.authLoading = false;
+                  setAuthSession(data.token, data.user);
+                  render();
+                })
+                .catch(function (err) {
+                  state.authLoading = false;
+                  state.errorMessage = err.message || 'Authentication failed.';
+                  render();
+                });
+            };
+          }
+
+          var btnSignOut = document.getElementById('btn-signout');
+          if (btnSignOut) {
+            btnSignOut.onclick = function () {
+              setAuthSession(null, null);
+              state.selectedRole = null;
+              state.errorMessage = null;
+              render();
+            };
+          }
+        }
+
+        function getPredictionStyle(label) {
+          if (label === 'Normal') {
+            return { cls: 'status-normal', glyph: '●' };
+          }
+          if (label === 'Osteopenia') {
+            return { cls: 'status-osteopenia', glyph: '▲' };
+          }
+          return { cls: 'status-osteoporosis', glyph: '✖' };
+        }
+
+        function fetchMyScans() {
+          if (!state.authToken) return;
+          state.scansLoadedForToken = state.authToken;
+          apiFetch('/scans/my', { clearOnUnauthorized: true })
+            .then(function (rows) {
+              if (Array.isArray(rows)) {
+                state.coachHistory = rows;
+                render();
+              }
+            })
+            .catch(function () {});
+        }
+
+        function fetchDoctorScans() {
+          if (!state.authToken || !state.sessionUser || state.sessionUser.role !== 'doctor') {
+            return;
+          }
+          state.doctorLoadedForToken = state.authToken;
+          state.doctorLoading = true;
+          state.doctorError = null;
+          render();
+
+          apiFetch('/scans/all', { clearOnUnauthorized: true })
+            .then(function (rows) {
+              state.doctorLoading = false;
+              state.doctorScans = Array.isArray(rows) ? rows : [];
+              render();
+            })
+            .catch(function (err) {
+              state.doctorLoading = false;
+              state.doctorError = err.message || 'Could not load crew scans.';
+              render();
+            });
+        }
+
+        function renderCoachContent() {
+          if (state.authToken && state.scansLoadedForToken !== state.authToken) {
+            fetchMyScans();
+          }
+
+          var isDoctorUser = state.sessionUser && state.sessionUser.role === 'doctor';
+          var r = state.coachResult;
+          var resultHtml = '';
+
+          if (!state.authToken) {
+            resultHtml =
+              '<div>' +
+                '<p class="metric-label">Authentication Required for Inference</p>' +
+                '<p class="rec-text" style="color:var(--text-secondary);margin-top:10px;">' +
+                  'Sign in with an Astronaut or Doctor account on <span class="mono-val">Sign In</span> so your JWT token can be attached to <span class="mono-val">/predict-colab</span>.' +
+                '</p>' +
+                '<div style="margin-top:18px;">' +
+                  '<button type="button" class="btn-secondary" data-route="signin">Go to Sign In</button>' +
+                '</div>' +
+              '</div>';
+          } else if (state.coachError) {
+            resultHtml =
+              '<div role="alert" class="error-box" style="margin-top:0;">' +
+                escapeHtml(state.coachError) +
+              '</div>';
+          } else if (r) {
+            var st = getPredictionStyle(r.prediction);
+            var confPct =
+              typeof r.confidence === 'number'
+                ? (r.confidence * 100).toFixed(2)
+                : '0.00';
+            var tScoreText =
+              r.t_score !== null && r.t_score !== undefined && !isNaN(Number(r.t_score))
+                ? Number(r.t_score).toFixed(2)
+                : 'Not loaded';
+
+            resultHtml =
+              '<div>' +
+                '<p class="metric-label">XGBoost Classification</p>' +
+                '<p class="status-line ' + st.cls + '">' +
+                  '<span aria-hidden="true">' + st.glyph + '</span> ' +
+                  escapeHtml(r.prediction) +
+                '</p>' +
+                '<div class="meta-line" style="margin-top:8px;">' +
+                  '<span class="mono-val">SOS ' + escapeHtml(Number(r.sos).toFixed(1)) + ' m/s</span>' +
+                  '<span aria-hidden="true">·</span>' +
+                  '<span class="mono-val">BUA ' + escapeHtml(Number(r.bua).toFixed(1)) + ' dB/MHz</span>' +
+                  (r.scan_id ? '<span aria-hidden="true">·</span><span class="mono-val">Scan #' + escapeHtml(r.scan_id) + '</span>' : '') +
+                '</div>' +
+                '<div class="metric-grid">' +
+                  '<div>' +
+                    '<p class="metric-label">Model Confidence</p>' +
+                    '<p class="metric-number">' + escapeHtml(confPct) + '<span class="metric-unit">%</span></p>' +
+                    '<div class="conf-track"><div class="conf-fill" style="width:' + Math.min(100, Math.max(0, Number(confPct))) + '%;"></div></div>' +
+                  '</div>' +
+                  '<div>' +
+                    '<p class="metric-label">Predicted T-Score</p>' +
+                    '<p class="metric-number">' + escapeHtml(tScoreText) + '</p>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="rec-block">' +
+                  '<p class="metric-label">Clinical Recommendation</p>' +
+                  '<p class="rec-text">' + escapeHtml(r.recommendation || 'No recommendation returned.') + '</p>' +
+                '</div>' +
+              '</div>';
+          } else {
+            resultHtml =
+              '<div>' +
+                '<p class="metric-label">Awaiting QUS Measurement</p>' +
+                '<p class="rec-text" style="color:var(--text-muted);margin-top:10px;">' +
+                  'Enter Speed of Sound (SOS) and Broadband Ultrasound Attenuation (BUA), then run diagnosis to score and save the scan in SQLite.' +
+                '</p>' +
+              '</div>';
+          }
+
+          var historyHtml = '';
+          if (state.coachHistory.length > 0) {
+            var rows = state.coachHistory
+              .map(function (item) {
+                var st = getPredictionStyle(item.prediction);
+                var conf =
+                  typeof item.confidence === 'number'
+                    ? (item.confidence * 100).toFixed(1) + '%'
+                    : '—';
+                var ts =
+                  item.t_score !== null && item.t_score !== undefined
+                    ? Number(item.t_score).toFixed(2)
+                    : '—';
+                return (
+                  '<tr>' +
+                    '<td class="mono-val">' + (item.id || item.scan_id ? '#' + escapeHtml(item.id || item.scan_id) : '—') + '</td>' +
+                    '<td class="mono-val">' + escapeHtml(Number(item.sos).toFixed(1)) + ' m/s</td>' +
+                    '<td class="mono-val">' + escapeHtml(Number(item.bua).toFixed(1)) + ' dB/MHz</td>' +
+                    '<td class="' + st.cls + '">' + st.glyph + ' ' + escapeHtml(item.prediction) + '</td>' +
+                    '<td class="mono-val">' + escapeHtml(conf) + '</td>' +
+                    '<td class="mono-val">' + escapeHtml(ts) + '</td>' +
+                  '</tr>'
+                );
+              })
+              .join('');
+
+            historyHtml =
+              '<div class="panel-divider">' +
+                '<p class="metric-label" style="margin-bottom:12px;">Saved Scan History (/scans/my)</p>' +
+                '<div class="history-table-wrap">' +
+                  '<table class="history-table">' +
+                    '<thead><tr><th>ID</th><th>SOS</th><th>BUA</th><th>Classification</th><th>Confidence</th><th>T-Score</th></tr></thead>' +
+                    '<tbody>' + rows + '</tbody>' +
+                  '</table>' +
+                '</div>' +
+              '</div>';
+          }
+
+          return (
+            '<div class="glass-panel pop-animate">' +
+              '<h1 class="panel-title">Coach AI-Model</h1>' +
+              '<p class="panel-subtitle">Quantitative ultrasound bone-density inference powered by the XGBoost classifier and T-score regressor.</p>' +
+              '<div class="panel-divider coach-split">' +
+                '<form id="coach-form" class="form-stack">' +
+                  '<div class="form-grid-2">' +
+                    '<label class="field-label">' +
+                      '<span>Speed of Sound (SOS · m/s)</span>' +
+                      '<input id="inp-sos" type="number" step="0.1" required value="' + escapeHtml(state.coachSos) + '" placeholder="1515.0" class="field-input mono-val" />' +
+                    '</label>' +
+                    '<label class="field-label">' +
+                      '<span>BUA (dB/MHz)</span>' +
+                      '<input id="inp-bua" type="number" step="0.1" required value="' + escapeHtml(state.coachBua) + '" placeholder="58.0" class="field-input mono-val" />' +
+                    '</label>' +
+                  '</div>' +
+                  (isDoctorUser
+                    ? '<label class="field-label">' +
+                        '<span>Target Astronaut User ID (optional for Doctors)</span>' +
+                        '<input id="inp-astronaut-id" type="number" min="1" step="1" value="' + escapeHtml(state.coachAstronautId) + '" placeholder="Leave blank to log under your ID" class="field-input mono-val" />' +
+                      '</label>'
+                    : '') +
+                  '<div>' +
+                    '<p class="field-hint" style="margin-bottom:8px;">Test input presets (populates SOS &amp; BUA):</p>' +
+                    '<div class="preset-row">' +
+                      '<button type="button" class="preset-btn" data-sos="1575.0" data-bua="78.0">Healthy Baseline</button>' +
+                      '<button type="button" class="preset-btn" data-sos="1515.0" data-bua="58.0">Moderate Loss</button>' +
+                      '<button type="button" class="preset-btn" data-sos="1470.0" data-bua="42.0">Severe Loss</button>' +
+                    '</div>' +
+                  '</div>' +
+                  '<label class="field-label">' +
+                    '<span>Backend Server URL</span>' +
+                    '<input id="inp-endpoint" type="text" value="' + escapeHtml(state.apiBase) + '" placeholder="https://xxxx.ngrok-free.app or http://127.0.0.1:5000" class="field-input mono-val" />' +
+                  '</label>' +
+                  '<p class="field-hint">' +
+                    'Paste the base Ngrok URL printed by <span class="mono-val">backend/colab_server.py</span> (or use <span class="mono-val">http://127.0.0.1:5000</span> / blank Vite proxy).' +
+                  '</p>' +
+                  '<button type="submit" class="btn-primary w-full"' + (state.coachLoading ? ' disabled' : '') + '>' +
+                    (state.coachLoading ? 'Running Diagnosis...' : 'Run Diagnosis') +
+                  '</button>' +
+                '</form>' +
+                '<div class="coach-subpanel">' +
+                  resultHtml +
+                '</div>' +
+              '</div>' +
+              historyHtml +
+              '<div class="panel-divider">' +
+                '<button type="button" class="btn-secondary" data-route="orbit">' +
+                  '<svg class="icon text-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+                    '<path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path>' +
+                  '</svg>' +
+                  'Back to orbit' +
+                '</button>' +
+              '</div>' +
+            '</div>'
+          );
+        }
+
+        function attachCoachHandlers() {
+          var presetBtns = document.querySelectorAll('.preset-btn[data-sos]');
+          presetBtns.forEach(function (btn) {
+            btn.onclick = function () {
+              state.coachSos = btn.getAttribute('data-sos');
+              state.coachBua = btn.getAttribute('data-bua');
+              var sosInp = document.getElementById('inp-sos');
+              var buaInp = document.getElementById('inp-bua');
+              if (sosInp) sosInp.value = state.coachSos;
+              if (buaInp) buaInp.value = state.coachBua;
+            };
+          });
+
+          var coachForm = document.getElementById('coach-form');
+          if (coachForm) {
+            coachForm.onsubmit = function (e) {
+              e.preventDefault();
+              var sosNum = parseFloat(document.getElementById('inp-sos').value);
+              var buaNum = parseFloat(document.getElementById('inp-bua').value);
+              var astInp = document.getElementById('inp-astronaut-id');
+              var astRaw = astInp ? (astInp.value || '').trim() : '';
+              var rawBase = (document.getElementById('inp-endpoint').value || '').trim();
+
+              state.coachSos = document.getElementById('inp-sos').value;
+              state.coachBua = document.getElementById('inp-bua').value;
+              state.coachAstronautId = astRaw;
+              setApiBase(rawBase || DEFAULT_API_BASE);
+
+              if (!state.authToken) {
+                state.coachError = 'Please sign in on Sign In before running model inference.';
+                render();
+                return;
+              }
+
+              if (!isFinite(sosNum) || !isFinite(buaNum)) {
+                state.coachError = 'Enter valid numeric values for both SOS and BUA.';
+                render();
+                return;
+              }
+
+              var body = { sos: sosNum, bua: buaNum };
+              if (astRaw) {
+                var astIdNum = parseInt(astRaw, 10);
+                if (isFinite(astIdNum) && astIdNum > 0) {
+                  body.astronaut_id = astIdNum;
+                }
+              }
+
+              state.coachLoading = true;
+              state.coachError = null;
+              render();
+
+              apiFetch('/predict-colab', {
+                method: 'POST',
+                body: body,
+                clearOnUnauthorized: true,
+              })
+                .then(function (data) {
+                  var entry = {
+                    id: data.scan_id || null,
+                    scan_id: data.scan_id || null,
+                    sos: sosNum,
+                    bua: buaNum,
+                    prediction: data.prediction || 'Unknown',
+                    confidence: typeof data.confidence === 'number' ? data.confidence : 0,
+                    t_score: data.t_score !== undefined ? data.t_score : null,
+                    recommendation: data.recommendation || '',
+                  };
+                  state.coachResult = entry;
+                  state.coachHistory = [entry].concat(state.coachHistory).slice(0, 12);
+                  state.coachLoading = false;
+                  state.coachError = null;
+                  render();
+                })
+                .catch(function (err) {
+                  state.coachLoading = false;
+                  state.coachError = err.message || 'Inference request failed.';
+                  render();
+                });
+            };
+          }
+        }
+
+        function renderDoctorsContent() {
+          var isDoctor = state.sessionUser && state.sessionUser.role === 'doctor';
+          if (isDoctor && state.doctorLoadedForToken !== state.authToken && !state.doctorLoading) {
+            fetchDoctorScans();
+          }
+
+          var bodyHtml = '';
+          if (!state.authToken || !isDoctor) {
+            bodyHtml =
+              '<p class="panel-subtitle">' +
+                'Sign in with a Doctor account on <span class="mono-val">Sign In</span> to review astronaut scans from <span class="mono-val">/scans/all</span>.' +
+              '</p>';
+          } else if (state.doctorError) {
+            bodyHtml = '<div role="alert" class="error-box">' + escapeHtml(state.doctorError) + '</div>';
+          } else if (state.doctorLoading) {
+            bodyHtml = '<p class="panel-subtitle">Loading astronaut scan records...</p>';
+          } else if (state.doctorScans.length === 0) {
+            bodyHtml = '<p class="panel-subtitle">No astronaut scans recorded yet in SQLite.</p>';
+          } else {
+            var rows = state.doctorScans
+              .map(function (item) {
+                var st = getPredictionStyle(item.prediction);
+                var conf =
+                  typeof item.confidence === 'number'
+                    ? (item.confidence * 100).toFixed(1) + '%'
+                    : '—';
+                var ts =
+                  item.t_score !== null && item.t_score !== undefined
+                    ? Number(item.t_score).toFixed(2)
+                    : '—';
+                return (
+                  '<tr>' +
+                    '<td>' + escapeHtml(item.astronaut_name || 'Astronaut') + '</td>' +
+                    '<td class="mono-val">' + escapeHtml(item.astronaut_badge || '#' + item.astronaut_id) + '</td>' +
+                    '<td class="mono-val">' + escapeHtml(Number(item.sos).toFixed(1)) + ' m/s</td>' +
+                    '<td class="mono-val">' + escapeHtml(Number(item.bua).toFixed(1)) + ' dB/MHz</td>' +
+                    '<td class="' + st.cls + '">' + st.glyph + ' ' + escapeHtml(item.prediction) + '</td>' +
+                    '<td class="mono-val">' + escapeHtml(conf) + '</td>' +
+                    '<td class="mono-val">' + escapeHtml(ts) + '</td>' +
+                  '</tr>'
+                );
+              })
+              .join('');
+
+            bodyHtml =
+              '<div class="panel-divider history-table-wrap">' +
+                '<table class="history-table">' +
+                  '<thead><tr><th>Astronaut</th><th>Badge</th><th>SOS</th><th>BUA</th><th>Classification</th><th>Confidence</th><th>T-Score</th></tr></thead>' +
+                  '<tbody>' + rows + '</tbody>' +
+                '</table>' +
+              '</div>';
+          }
+
+          return (
+            '<div class="glass-panel pop-animate">' +
+              '<div class="panel-header-row">' +
+                '<div>' +
+                  '<h1 class="panel-title">Doctors Review</h1>' +
+                '</div>' +
+                (isDoctor
+                  ? '<button type="button" id="btn-refresh-scans" class="btn-secondary">Refresh Crew Scans</button>'
+                  : '') +
+              '</div>' +
+              bodyHtml +
+              '<div class="panel-divider actions-group">' +
+                '<button type="button" class="btn-primary" data-route="orbit">' +
+                  '<svg class="icon text-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+                    '<path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path>' +
+                  '</svg>' +
+                  'Back to orbit' +
+                '</button>' +
+                (!isDoctor
+                  ? '<button type="button" class="btn-secondary" data-route="signin">Sign In as Doctor</button>'
+                  : '') +
+              '</div>' +
+            '</div>'
+          );
+        }
+
+        function attachDoctorsHandlers() {
+          var btnRefresh = document.getElementById('btn-refresh-scans');
+          if (btnRefresh) {
+            btnRefresh.onclick = function () {
+              state.doctorLoadedForToken = null;
+              fetchDoctorScans();
+            };
+          }
+        }
+
+        function renderApprovalContent() {
+          return (
+            '<div class="glass-panel pop-animate">' +
+              '<h1 class="panel-title">Doctor Approval</h1>' +
+              '<p class="panel-subtitle">Flight-surgeon sign-off and orbital musculoskeletal clearance approval.</p>' +
+              '<div class="panel-divider actions-group">' +
+                '<button type="button" class="btn-primary" data-route="orbit">' +
+                  '<svg class="icon text-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+                    '<path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path>' +
+                  '</svg>' +
+                  'Back to orbit' +
+                '</button>' +
+                '<button type="button" class="btn-secondary" data-route="doctors">Open Doctors Review</button>' +
+              '</div>' +
+            '</div>'
+          );
+        }
+
+        // =====================================================================
+        // 01 · MY SKELETON — 18 BONES, 30 SENSORS & THREE.JS 3D SUIT MODEL
+        // =====================================================================
+        var COLOR_THRESHOLDS = {
+          healthy: '#10B981',
+          moderate: '#F59E0B',
+          critical: '#EF4444',
+          empty: '#CBD5E1',
+        };
+
+        var BONE_CATALOG = [
+          { id: 'cranium', label: 'Cranium & Mandible', sensors: ['QUS-01'] },
+          { id: 'cervical-spine', label: 'Cervical Spine (C1–C7)', sensors: ['QUS-01', 'EMG-06R', 'EMG-06L'] },
+          { id: 'clavicle-scapula', label: 'Clavicles & Scapulae', sensors: ['EMG-01R', 'EMG-01L', 'EMG-04R', 'EMG-04L'] },
+          { id: 'thoracic-cage', label: 'Thoracic Spine (T1–T12), Ribs & Sternum', sensors: ['QUS-01', 'EMG-04R', 'EMG-04L', 'EMG-05R', 'EMG-05L'] },
+          { id: 'lumbar-spine', label: 'Lumbar Spine (L1–L5)', sensors: ['QUS-02', 'EMG-05R', 'EMG-05L', 'EMG-06R', 'EMG-06L'] },
+          { id: 'pelvis', label: 'Pelvic Girdle (Ilium, Sacrum & Coccyx)', sensors: ['QUS-02', 'EMG-07R', 'EMG-07L'] },
+          { id: 'humerus-right', label: 'Right Humerus', sensors: ['EMG-01R', 'EMG-02R'] },
+          { id: 'humerus-left', label: 'Left Humerus', sensors: ['EMG-01L', 'EMG-02L'] },
+          { id: 'radius-ulna-right', label: 'Right Radius, Ulna & Hand', sensors: ['QUS-03', 'EMG-03R'] },
+          { id: 'radius-ulna-left', label: 'Left Radius, Ulna & Hand', sensors: ['EMG-03L'] },
+          { id: 'femur-right', label: 'Right Femur (Head, Neck & Shaft)', sensors: ['QUS-04', 'EMG-07R', 'EMG-08R', 'EMG-09R'] },
+          { id: 'femur-left', label: 'Left Femur (Head, Neck & Shaft)', sensors: ['QUS-05', 'EMG-07L', 'EMG-08L', 'EMG-09L'] },
+          { id: 'patella-right', label: 'Right Patella (Kneecap)', sensors: ['EMG-08R'] },
+          { id: 'patella-left', label: 'Left Patella (Kneecap)', sensors: ['EMG-08L'] },
+          { id: 'tibia-right', label: 'Right Tibia & Fibula', sensors: ['QUS-06', 'EMG-10R', 'EMG-11R'] },
+          { id: 'tibia-left', label: 'Left Tibia & Fibula', sensors: ['QUS-07', 'EMG-10L', 'EMG-11L'] },
+          { id: 'calcaneus-right', label: 'Right Calcaneus & Foot', sensors: ['QUS-08', 'EMG-10R', 'EMG-11R'] },
+          { id: 'calcaneus-left', label: 'Left Calcaneus & Foot', sensors: ['EMG-10L', 'EMG-11L'] },
+        ];
+
+        var SENSOR_CATALOG = [
+          { id: 'QUS-01', type: 'QUS', label: 'Cervical / Thoracic Axial Array', boneId: 'thoracic-cage', pos: [0, 1.38, 0.11] },
+          { id: 'QUS-02', type: 'QUS', label: 'Lumbar / Sacral Acoustic Probe', boneId: 'lumbar-spine', pos: [0, 1.04, 0.1] },
+          { id: 'QUS-03', type: 'QUS', label: 'Right Distal Radius Transducer', boneId: 'radius-ulna-right', pos: [-0.36, 0.96, 0.04] },
+          { id: 'QUS-04', type: 'QUS', label: 'Right Femoral Trochanter Probe', boneId: 'femur-right', pos: [-0.15, 0.86, 0.04] },
+          { id: 'QUS-05', type: 'QUS', label: 'Left Femoral Trochanter Probe', boneId: 'femur-left', pos: [0.15, 0.86, 0.04] },
+          { id: 'QUS-06', type: 'QUS', label: 'Right Tibial Shaft Transducer', boneId: 'tibia-right', pos: [-0.11, 0.34, 0.06] },
+          { id: 'QUS-07', type: 'QUS', label: 'Left Tibial Shaft Transducer', boneId: 'tibia-left', pos: [0.11, 0.34, 0.06] },
+          { id: 'QUS-08', type: 'QUS', label: 'Right Calcaneus Heel Caliper', boneId: 'calcaneus-right', pos: [-0.11, 0.09, -0.05] },
+        ];
+
+        var EMG_GROUPS = [
+          { idx: '01', name: 'Deltoid', bone: 'clavicle-scapula', pos: [0.23, 1.44, 0.02] },
+          { idx: '02', name: 'Biceps Brachii', bone: 'humerus', pos: [0.27, 1.24, 0.04] },
+          { idx: '03', name: 'Forearm Flexors', bone: 'radius-ulna', pos: [0.32, 1.0, 0.03] },
+          { idx: '04', name: 'Pectoralis Major', bone: 'thoracic-cage', pos: [0.1, 1.36, 0.11] },
+          { idx: '05', name: 'Rectus Abdominis', bone: 'lumbar-spine', pos: [0.06, 1.11, 0.1] },
+          { idx: '06', name: 'Erector Spinae', bone: 'lumbar-spine', pos: [0.06, 1.15, -0.09] },
+          { idx: '07', name: 'Gluteus Medius', bone: 'pelvis', pos: [0.13, 0.92, -0.08] },
+          { idx: '08', name: 'Quadriceps Femoris', bone: 'femur', pos: [0.1, 0.68, 0.07] },
+          { idx: '09', typeBone: 'femur', name: 'Hamstrings', bone: 'femur', pos: [0.1, 0.68, -0.07] },
+          { idx: '10', name: 'Gastrocnemius', bone: 'tibia', pos: [0.1, 0.38, -0.06] },
+          { idx: '11', name: 'Tibialis Anterior', bone: 'tibia', pos: [0.11, 0.38, 0.05] },
+        ];
+
+        EMG_GROUPS.forEach(function (g) {
+          var sideR = g.bone === 'humerus' || g.bone === 'radius-ulna' || g.bone === 'femur' || g.bone === 'tibia' ? g.bone + '-right' : g.bone;
+          var sideL = g.bone === 'humerus' || g.bone === 'radius-ulna' || g.bone === 'femur' || g.bone === 'tibia' ? g.bone + '-left' : g.bone;
+          SENSOR_CATALOG.push({
+            id: 'EMG-' + g.idx + 'R',
+            type: 'EMG',
+            label: 'Right ' + g.name + ' Patch',
+            boneId: sideR,
+            pos: [-g.pos[0], g.pos[1], g.pos[2]],
+          });
+          SENSOR_CATALOG.push({
+            id: 'EMG-' + g.idx + 'L',
+            type: 'EMG',
+            label: 'Left ' + g.name + ' Patch',
+            boneId: sideL,
+            pos: [g.pos[0], g.pos[1], g.pos[2]],
+          });
+        });
+
+        var SAMPLE_DATASET_TEXT = [
+          'cranium,10,1605,82',
+          'lumbar-spine,28,1532,62',
+          'femur-right,55,1468,44',
+          'femur-left,15,1585,78',
+          'tibia-right,32,1518,59',
+          'calcaneus-right,58,1459,41',
+        ].join('\n');
+
+        var CAMERA_PRESETS = {
+          'full-body': { pos: [0, 1.18, 3.05], target: [0, 0.96, 0], label: 'Full Body' },
+          'thorax': { pos: [0.18, 1.38, 1.45], target: [0, 1.3, 0], label: 'Thorax & Spine' },
+          'pelvis-femur': { pos: [0.22, 0.88, 1.4], target: [0, 0.78, 0], label: 'Pelvis & Femur' },
+          'tibia-foot': { pos: [0.24, 0.36, 1.28], target: [0, 0.28, 0], label: 'Tibia & Foot' },
+          'posterior': { pos: [0.15, 1.18, -2.85], target: [0, 0.98, 0], label: 'Posterior Array' },
+        };
+
+        function getBoneCategory(pct) {
+          if (pct === null || pct === undefined || isNaN(Number(pct))) {
+            return { key: 'empty', label: 'Awaiting Data', color: COLOR_THRESHOLDS.empty };
+          }
+          var v = Math.max(0, Math.min(100, Number(pct)));
+          if (v < 18) return { key: 'healthy', label: 'Healthy', color: COLOR_THRESHOLDS.healthy };
+          if (v < 38) return { key: 'moderate', label: 'Moderate Loss', color: COLOR_THRESHOLDS.moderate };
+          return { key: 'critical', label: 'Critical Risk', color: COLOR_THRESHOLDS.critical };
+        }
+
+        function computeBoneTelemetry(boneId, pct) {
+          var custom = state.skelCustomMetrics[boneId];
+          if (pct === null || pct === undefined || isNaN(Number(pct))) {
+            return {
+              sos: custom && custom.sos ? custom.sos.toFixed(1) : '—',
+              bua: custom && custom.bua ? custom.bua.toFixed(1) : '—',
+              tScore: '—',
+            };
+          }
+          var v = Math.max(0, Math.min(100, Number(pct)));
+          var sos = custom && custom.sos ? custom.sos : 1625 - v * 2.85;
+          var bua = custom && custom.bua ? custom.bua : 86 - v * 0.74;
+          var tScore = 0.6 - v * 0.056;
+          return {
+            sos: sos.toFixed(1),
+            bua: bua.toFixed(1),
+            tScore: tScore.toFixed(2),
+          };
+        }
+
+        function countBoneStates() {
+          var counts = { healthy: 0, moderate: 0, critical: 0, empty: 0 };
+          BONE_CATALOG.forEach(function (b) {
+            var cat = getBoneCategory(state.skelWeakness[b.id]);
+            counts[cat.key]++;
+          });
+          return counts;
+        }
+
+        function applyDatasetText(rawText) {
+          var trimmed = String(rawText || '').trim();
+          if (!trimmed) {
+            state.skelWeakness = {};
+            state.skelCustomMetrics = {};
+            state.skelDatasetError = null;
+            return true;
+          }
+          var validIds = {};
+          BONE_CATALOG.forEach(function (b) {
+            validIds[b.id] = true;
+          });
+          var nextWeakness = {};
+          var nextMetrics = {};
+
+          if (trimmed[0] === '[' || trimmed[0] === '{') {
+            try {
+              var parsed = JSON.parse(trimmed);
+              var arr = Array.isArray(parsed) ? parsed : [parsed];
+              arr.forEach(function (item) {
+                var bid = item && (item.boneId || item.id);
+                if (bid && validIds[bid]) {
+                  var w = Number(item.weaknessPercent !== undefined ? item.weaknessPercent : item.weakness);
+                  if (isFinite(w)) nextWeakness[bid] = Math.max(0, Math.min(100, Math.round(w)));
+                  var s = Number(item.sosMs !== undefined ? item.sosMs : item.sos);
+                  var bu = Number(item.buaDbMhz !== undefined ? item.buaDbMhz : item.bua);
+                  if (isFinite(s) || isFinite(bu)) {
+                    nextMetrics[bid] = { sos: isFinite(s) ? s : null, bua: isFinite(bu) ? bu : null };
+                  }
+                }
+              });
+            } catch (e) {
+              state.skelDatasetError = 'Invalid JSON syntax. Use an array of { "boneId", "weaknessPercent" } objects or CSV rows.';
+              return false;
+            }
+          } else {
+            var lines = trimmed.split(/\r?\n/);
+            var matchedAny = false;
+            lines.forEach(function (line) {
+              var clean = line.trim();
+              if (!clean || clean.toLowerCase().indexOf('boneid') === 0) return;
+              var parts = clean.split(',').map(function (p) { return p.trim(); });
+              var bid = parts[0];
+              if (bid && validIds[bid] && parts.length >= 2) {
+                var w = Number(parts[1]);
+                if (isFinite(w)) {
+                  nextWeakness[bid] = Math.max(0, Math.min(100, Math.round(w)));
+                  matchedAny = true;
+                }
+                var s = parts.length >= 3 ? Number(parts[2]) : NaN;
+                var bu = parts.length >= 4 ? Number(parts[3]) : NaN;
+                if (isFinite(s) || isFinite(bu)) {
+                  nextMetrics[bid] = { sos: isFinite(s) ? s : null, bua: isFinite(bu) ? bu : null };
+                }
+              }
+            });
+            if (!matchedAny) {
+              state.skelDatasetError = 'No valid CSV rows matched. Expected format: femur-right,55,1468,44';
+              return false;
+            }
+          }
+
+          state.skelWeakness = nextWeakness;
+          state.skelCustomMetrics = nextMetrics;
+          state.skelDatasetError = null;
+          return true;
+        }
+
+        // Lazy protocol-aware loader for the local bundled Three.js vendor script
+        var threePromise = null;
+        function ensureThreeLoaded() {
+          if (window.THREE && window.ThreeOrbitControls && window.ThreeRoomEnvironment) {
+            return Promise.resolve();
+          }
+          if (threePromise) return threePromise;
+          threePromise = new Promise(function (resolve, reject) {
+            var script = document.createElement('script');
+            script.src = vendorBase + '/three-bundle.js';
+            script.onload = function () {
+              if (window.THREE) resolve();
+              else reject(new Error('Three.js bundle failed to expose THREE global.'));
+            };
+            script.onerror = function () {
+              reject(new Error('Could not load ' + script.src));
+            };
+            document.head.appendChild(script);
+          });
+          return threePromise;
+        }
+
+        // Active 3D scene controller singleton
+        var skelController = null;
+
+        function disposeSkeletonScene() {
+          if (!skelController) return;
+          skelController.dispose();
+          skelController = null;
+        }
+
+        function createPedestalTexture(THREE, maxAniso) {
+          var canvas = document.createElement('canvas');
+          canvas.width = 512;
+          canvas.height = 512;
+          var ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, 512, 512);
+          ctx.translate(256, 256);
+
+          var grad = ctx.createRadialGradient(0, 0, 20, 0, 0, 246);
+          grad.addColorStop(0, 'rgba(34, 211, 238, 0.14)');
+          grad.addColorStop(0.68, 'rgba(15, 23, 42, 0.35)');
+          grad.addColorStop(0.92, 'rgba(34, 211, 238, 0.38)');
+          grad.addColorStop(1, 'rgba(34, 211, 238, 0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(0, 0, 246, 0, Math.PI * 2);
+          ctx.fill();
+
+          [125, 180, 224].forEach(function (r, idx) {
+            ctx.strokeStyle = idx === 2 ? 'rgba(103, 232, 249, 0.92)' : 'rgba(34, 211, 238, 0.42)';
+            ctx.lineWidth = idx === 2 ? 4 : 2;
+            ctx.beginPath();
+            ctx.arc(0, 0, r, 0, Math.PI * 2);
+            ctx.stroke();
+          });
+
+          for (var i = 0; i < 36; i++) {
+            var a = (i / 36) * Math.PI * 2;
+            var r0 = i % 3 === 0 ? 186 : 196;
+            var r1 = 214;
+            ctx.strokeStyle = i % 3 === 0 ? 'rgba(103, 232, 249, 0.8)' : 'rgba(34, 211, 238, 0.32)';
+            ctx.lineWidth = i % 3 === 0 ? 2.5 : 1.2;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(a) * r0, Math.sin(a) * r0);
+            ctx.lineTo(Math.cos(a) * r1, Math.sin(a) * r1);
+            ctx.stroke();
+          }
+
+          var tex = new THREE.CanvasTexture(canvas);
+          tex.colorSpace = THREE.SRGBColorSpace;
+          tex.anisotropy = maxAniso || 1;
+          return tex;
+        }
+
+        function mountSkeletonScene(mountEl, tooltipEl) {
+          disposeSkeletonScene();
+          if (!mountEl || !window.THREE) return;
+
+          var THREE = window.THREE;
+          var OrbitControls = window.ThreeOrbitControls;
+          var RoomEnvironment = window.ThreeRoomEnvironment;
+
+          var isSoftwareGl = (function () {
+            try {
+              var c = document.createElement('canvas');
+              var gl = c.getContext('webgl2') || c.getContext('webgl');
+              if (!gl) return true;
+              var ext = gl.getExtension('WEBGL_debug_renderer_info');
+              var gpu = String(gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER));
+              var lose = gl.getExtension('WEBGL_lose_context');
+              if (lose) lose.loseContext();
+              return /SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(gpu);
+            } catch (e) {
+              return false;
+            }
+          })();
+
+          var width = mountEl.clientWidth || 640;
+          var height = mountEl.clientHeight || 560;
+
+          var scene = new THREE.Scene();
+          scene.background = new THREE.Color(0x060911);
+          scene.fog = new THREE.FogExp2(0x060911, 0.058);
+
+          var camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 40);
+          var initialPreset = CAMERA_PRESETS[state.skelPreset] || CAMERA_PRESETS['full-body'];
+          camera.position.set(initialPreset.pos[0], initialPreset.pos[1], initialPreset.pos[2]);
+
+          var renderer = new THREE.WebGLRenderer({
+            antialias: !isSoftwareGl,
+            powerPreference: 'high-performance',
+          });
+          renderer.outputColorSpace = THREE.SRGBColorSpace;
+          renderer.toneMapping = THREE.ACESFilmicToneMapping;
+          renderer.toneMappingExposure = 1.12;
+          renderer.setPixelRatio(isSoftwareGl ? 1 : Math.min(window.devicePixelRatio || 1, 2));
+          renderer.setSize(width, height);
+          renderer.shadowMap.enabled = !isSoftwareGl;
+          renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+          mountEl.innerHTML = '';
+          mountEl.appendChild(renderer.domElement);
+
+          var pmremGenerator = new THREE.PMREMGenerator(renderer);
+          var envRT = pmremGenerator.fromScene(new RoomEnvironment(), 0.04);
+          scene.environment = envRT.texture;
+          pmremGenerator.dispose();
+
+          var controls = new OrbitControls(camera, renderer.domElement);
+          controls.enableDamping = !isSoftwareGl;
+          controls.dampingFactor = 0.07;
+          controls.minDistance = 0.9;
+          controls.maxDistance = 5.2;
+          controls.maxPolarAngle = Math.PI * 0.56;
+          controls.target.set(initialPreset.target[0], initialPreset.target[1], initialPreset.target[2]);
+          controls.update();
+
+          // Warm / Cool Clinical Studio Lighting Rig
+          var hemiLight = new THREE.HemisphereLight(0x9bd7ff, 0x0b1220, 0.82);
+          scene.add(hemiLight);
+
+          var keyLight = new THREE.DirectionalLight(0xfff1e0, 1.85);
+          keyLight.position.set(2.4, 3.6, 2.8);
+          if (!isSoftwareGl) {
+            keyLight.castShadow = true;
+            keyLight.shadow.mapSize.set(1024, 1024);
+            keyLight.shadow.camera.left = -1.6;
+            keyLight.shadow.camera.right = 1.6;
+            keyLight.shadow.camera.top = 2.4;
+            keyLight.shadow.camera.bottom = -0.4;
+            keyLight.shadow.bias = -0.0005;
+            keyLight.shadow.normalBias = 0.02;
+          }
+          scene.add(keyLight);
+
+          var rimLight = new THREE.DirectionalLight(0x22d3ee, 1.35);
+          rimLight.position.set(-2.2, 2.2, -2.5);
+          scene.add(rimLight);
+
+          var padGlowLight = new THREE.PointLight(0x06b6d4, 1.15, 3.5, 2);
+          padGlowLight.position.set(0, 0.16, 0.25);
+          scene.add(padGlowLight);
+
+          // Procedural Geometries & Tracking Lists
+          var disposables = { geometries: [], materials: [], textures: [] };
+          function trackGeo(g) { disposables.geometries.push(g); return g; }
+          function trackMat(m) { disposables.materials.push(m); return m; }
+          function trackTex(t) { disposables.textures.push(t); return t; }
+
+          // Dark Lab Horizon Grid + Pedestal Base (Grounded at Y = 0)
+          var grid = new THREE.GridHelper(16, 36, 0x164e63, 0x0f172a);
+          grid.position.y = -0.002;
+          scene.add(grid);
+
+          var pedTex = trackTex(createPedestalTexture(THREE, renderer.capabilities.getMaxAnisotropy()));
+          var pedBaseMat = trackMat(new THREE.MeshStandardMaterial({
+            color: 0x1e293b,
+            metalness: 0.78,
+            roughness: 0.32,
+          }));
+          var pedTrimMat = trackMat(new THREE.MeshStandardMaterial({
+            color: 0x67e8f9,
+            emissive: 0x06b6d4,
+            emissiveIntensity: 1.45,
+            roughness: 0.2,
+            metalness: 0.4,
+          }));
+          var pedDecalMat = trackMat(new THREE.MeshBasicMaterial({
+            map: pedTex,
+            transparent: true,
+            depthWrite: false,
+            polygonOffset: true,
+            polygonOffsetFactor: -1,
+            polygonOffsetUnits: -1,
+          }));
+
+          var pedestalGroup = new THREE.Group();
+          var baseCyl = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(0.68, 0.78, 0.06, 48)), pedBaseMat);
+          baseCyl.position.y = 0.03;
+          baseCyl.receiveShadow = true;
+          pedestalGroup.add(baseCyl);
+
+          var topPlate = new THREE.Mesh(trackGeo(new THREE.CylinderGeometry(0.62, 0.66, 0.02, 48)), pedBaseMat);
+          topPlate.position.y = 0.068;
+          topPlate.receiveShadow = true;
+          pedestalGroup.add(topPlate);
+
+          var glowRing = new THREE.Mesh(trackGeo(new THREE.TorusGeometry(0.64, 0.011, 16, 64)), pedTrimMat);
+          glowRing.rotation.x = Math.PI / 2;
+          glowRing.position.y = 0.078;
+          pedestalGroup.add(glowRing);
+
+          var decalDisc = new THREE.Mesh(trackGeo(new THREE.CircleGeometry(0.61, 48)), pedDecalMat);
+          decalDisc.rotation.x = -Math.PI / 2;
+          decalDisc.position.y = 0.081;
+          pedestalGroup.add(decalDisc);
+          scene.add(pedestalGroup);
+
+          // Shared reusable bone material factory (1 material per boneId for instant reactive color updates)
+          var boneMaterials = {};
+          var boneMeshes = [];
+          BONE_CATALOG.forEach(function (b) {
+            var mat = trackMat(new THREE.MeshStandardMaterial({
+              color: COLOR_THRESHOLDS.empty,
+              emissive: 0x000000,
+              emissiveIntensity: 0.28,
+              roughness: 0.42,
+              metalness: 0.08,
+            }));
+            boneMaterials[b.id] = mat;
+          });
+
+          var skeletonRoot = new THREE.Group();
+          skeletonRoot.position.y = 0.082; // Standing flush on top of pedestal
+          scene.add(skeletonRoot);
+
+          function addBoneMesh(boneId, geo, pos, rot, scale) {
+            trackGeo(geo);
+            var mesh = new THREE.Mesh(geo, boneMaterials[boneId]);
+            mesh.position.set(pos[0], pos[1], pos[2]);
+            if (rot) mesh.rotation.set(rot[0], rot[1], rot[2]);
+            if (scale) mesh.scale.set(scale[0], scale[1], scale[2]);
+            mesh.castShadow = !isSoftwareGl;
+            mesh.receiveShadow = true;
+            mesh.userData.boneId = boneId;
+            skeletonRoot.add(mesh);
+            boneMeshes.push(mesh);
+            return mesh;
+          }
+
+          var socketMat = trackMat(new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.9 }));
+
+          // 1. Cranium & Mandible
+          addBoneMesh('cranium', new THREE.SphereGeometry(0.095, 24, 20), [0, 1.69, 0.005], null, [0.88, 1.06, 0.98]);
+          addBoneMesh('cranium', new THREE.BoxGeometry(0.082, 0.056, 0.075), [0, 1.595, 0.032]);
+          addBoneMesh('cranium', new THREE.BoxGeometry(0.11, 0.025, 0.05), [0, 1.645, 0.045]);
+          [-0.032, 0.032].forEach(function (ex) {
+            var eye = new THREE.Mesh(trackGeo(new THREE.SphereGeometry(0.018, 12, 12)), socketMat);
+            eye.position.set(ex, 1.675, 0.084);
+            eye.userData.boneId = 'cranium';
+            skeletonRoot.add(eye);
+            boneMeshes.push(eye);
+          });
+
+          // 2. Cervical Spine (C1-C7)
+          for (var c = 0; c < 6; c++) {
+            addBoneMesh('cervical-spine', new THREE.CylinderGeometry(0.022, 0.024, 0.014, 12), [0, 1.465 + c * 0.019, -0.015]);
+          }
+
+          // 3. Clavicles & Scapulae
+          [-1, 1].forEach(function (side) {
+            addBoneMesh('clavicle-scapula', new THREE.CylinderGeometry(0.011, 0.011, 0.16, 10), [side * 0.095, 1.425, 0.052], [0, 0, side * 1.42]);
+            addBoneMesh('clavicle-scapula', new THREE.BoxGeometry(0.09, 0.125, 0.018), [side * 0.085, 1.35, -0.068], [0.12, side * -0.18, side * -0.14]);
+          });
+
+          // 4. Thoracic Spine, Ribs & Sternum
+          addBoneMesh('thoracic-cage', new THREE.BoxGeometry(0.036, 0.19, 0.02), [0, 1.32, 0.098]);
+          for (var t = 0; t < 7; t++) {
+            var ry = 1.40 - t * 0.03;
+            var rx = 0.085 + Math.sin((t / 6) * Math.PI) * 0.042;
+            addBoneMesh('thoracic-cage', new THREE.TorusGeometry(rx, 0.0085, 8, 22, Math.PI * 1.55), [0, ry, 0.015], [Math.PI / 2, 0, Math.PI * 0.22], [1.12, 0.72, 1]);
+            addBoneMesh('thoracic-cage', new THREE.CylinderGeometry(0.024, 0.025, 0.022, 12), [0, ry, -0.055]);
+          }
+
+          // 5. Lumbar Spine (L1-L5)
+          for (var l = 0; l < 5; l++) {
+            addBoneMesh('lumbar-spine', new THREE.CylinderGeometry(0.031, 0.033, 0.026, 14), [0, 1.15 - l * 0.034, -0.032]);
+          }
+
+          // 6. Pelvis
+          [-1, 1].forEach(function (side) {
+            addBoneMesh('pelvis', new THREE.BoxGeometry(0.105, 0.12, 0.068), [side * 0.095, 0.935, 0.01], [0, side * 0.25, side * -0.22]);
+            addBoneMesh('pelvis', new THREE.TorusGeometry(0.034, 0.011, 10, 18), [side * 0.072, 0.865, 0.022], [0.25, 0, 0]);
+          });
+          addBoneMesh('pelvis', new THREE.CylinderGeometry(0.045, 0.02, 0.1, 12), [0, 0.92, -0.025]);
+
+          // 7-10. Arms (Humerus + Radius/Ulna/Hand)
+          [-1, 1].forEach(function (side) {
+            var humId = side < 0 ? 'humerus-right' : 'humerus-left';
+            var radId = side < 0 ? 'radius-ulna-right' : 'radius-ulna-left';
+            addBoneMesh(humId, new THREE.SphereGeometry(0.026, 14, 12), [side * 0.205, 1.405, 0.01]);
+            addBoneMesh(humId, new THREE.CylinderGeometry(0.016, 0.014, 0.25, 12), [side * 0.228, 1.27, 0.01], [0, 0, side * 0.11]);
+            addBoneMesh(radId, new THREE.CylinderGeometry(0.011, 0.009, 0.23, 10), [side * 0.255, 1.03, 0.022], [0.06, 0, side * 0.09]);
+            addBoneMesh(radId, new THREE.CylinderGeometry(0.01, 0.009, 0.23, 10), [side * 0.242, 1.03, 0.002], [0.06, 0, side * 0.09]);
+            addBoneMesh(radId, new THREE.BoxGeometry(0.032, 0.085, 0.016), [side * 0.268, 0.875, 0.026], [0, 0, side * 0.06]);
+          });
+
+          // 11-18. Legs (Femur + Patella + Tibia/Fibula + Calcaneus/Foot)
+          [-1, 1].forEach(function (side) {
+            var femId = side < 0 ? 'femur-right' : 'femur-left';
+            var patId = side < 0 ? 'patella-right' : 'patella-left';
+            var tibId = side < 0 ? 'tibia-right' : 'tibia-left';
+            var calId = side < 0 ? 'calcaneus-right' : 'calcaneus-left';
+
+            addBoneMesh(femId, new THREE.SphereGeometry(0.028, 14, 12), [side * 0.12, 0.88, 0.015]);
+            addBoneMesh(femId, new THREE.CylinderGeometry(0.021, 0.019, 0.36, 14), [side * 0.112, 0.69, 0.012], [0, 0, side * -0.05]);
+            addBoneMesh(patId, new THREE.SphereGeometry(0.022, 12, 10), [side * 0.104, 0.495, 0.036], null, [0.95, 1.05, 0.6]);
+            addBoneMesh(tibId, new THREE.CylinderGeometry(0.019, 0.015, 0.36, 14), [side * 0.102, 0.295, 0.008]);
+            addBoneMesh(tibId, new THREE.CylinderGeometry(0.008, 0.007, 0.35, 10), [side * 0.122, 0.295, -0.006]);
+            addBoneMesh(calId, new THREE.BoxGeometry(0.048, 0.045, 0.075), [side * 0.102, 0.068, -0.018]);
+            addBoneMesh(calId, new THREE.BoxGeometry(0.054, 0.025, 0.115), [side * 0.102, 0.032, 0.045]);
+          });
+
+          // Smart Diagnostic Undersuit Panels (for Full Suit / X-Ray / Exploded animations)
+          var suitShellGroup = new THREE.Group();
+          suitShellGroup.position.y = 0.082;
+          scene.add(suitShellGroup);
+
+          var suitPanels = [];
+          function makeSuitMat(isXray) {
+            return trackMat(new THREE.MeshStandardMaterial({
+              color: 0x0f1b2e,
+              metalness: 0.28,
+              roughness: 0.62,
+              transparent: true,
+              opacity: isXray ? 0.22 : 0.94,
+              depthWrite: !isXray,
+              side: THREE.DoubleSide,
+            }));
+          }
+          var suitMaterial = makeSuitMat(state.skelViewMode === 'xray');
+
+          function addSuitShell(geo, basePos, explodeOffset, rot) {
+            trackGeo(geo);
+            var m = new THREE.Mesh(geo, suitMaterial);
+            m.position.set(basePos[0], basePos[1], basePos[2]);
+            if (rot) m.rotation.set(rot[0], rot[1], rot[2]);
+            m.renderOrder = 2;
+            suitShellGroup.add(m);
+            suitPanels.push({ mesh: m, base: basePos, explode: explodeOffset });
+          }
+
+          addSuitShell(new THREE.CylinderGeometry(0.165, 0.14, 0.44, 24), [0, 1.24, 0], [0, 0.04, 0.18]);
+          addSuitShell(new THREE.CylinderGeometry(0.145, 0.155, 0.18, 22), [0, 0.94, 0], [0, -0.02, -0.16]);
+          addSuitShell(new THREE.CylinderGeometry(0.065, 0.07, 0.065, 18), [0, 1.49, 0], [0, 0.08, 0]);
+          [-1, 1].forEach(function (side) {
+            addSuitShell(new THREE.CylinderGeometry(0.052, 0.044, 0.27, 14), [side * 0.228, 1.27, 0.01], [side * 0.22, 0.03, 0], [0, 0, side * 0.11]);
+            addSuitShell(new THREE.CylinderGeometry(0.042, 0.034, 0.25, 14), [side * 0.25, 1.01, 0.01], [side * 0.28, -0.02, 0], [0.05, 0, side * 0.09]);
+            addSuitShell(new THREE.CylinderGeometry(0.074, 0.06, 0.4, 16), [side * 0.112, 0.69, 0.012], [side * 0.16, 0, 0.1], [0, 0, side * -0.04]);
+            addSuitShell(new THREE.CylinderGeometry(0.056, 0.046, 0.39, 16), [side * 0.104, 0.295, 0.008], [side * 0.16, -0.03, 0.1]);
+          });
+
+          // Central Chest Telemetry Controller Hub + 30 Sensors + Wiring Harnesses
+          var sensorGroup = new THREE.Group();
+          sensorGroup.position.y = 0.082;
+          scene.add(sensorGroup);
+
+          var hubMat = trackMat(new THREE.MeshStandardMaterial({
+            color: 0x1e293b,
+            metalness: 0.65,
+            roughness: 0.25,
+            emissive: 0x06b6d4,
+            emissiveIntensity: 0.32,
+          }));
+          var hubMesh = new THREE.Mesh(trackGeo(new THREE.BoxGeometry(0.11, 0.075, 0.026)), hubMat);
+          hubMesh.position.set(0, 1.29, 0.125);
+          sensorGroup.add(hubMesh);
+
+          var qusMat = trackMat(new THREE.MeshStandardMaterial({
+            color: 0x67e8f9,
+            emissive: 0x06b6d4,
+            emissiveIntensity: 1.0,
+            metalness: 0.5,
+            roughness: 0.2,
+          }));
+          var emgMat = trackMat(new THREE.MeshStandardMaterial({
+            color: 0xc084fc,
+            emissive: 0x9333ea,
+            emissiveIntensity: 0.85,
+            metalness: 0.45,
+            roughness: 0.28,
+          }));
+          var wireQusMat = trackMat(new THREE.MeshBasicMaterial({ color: 0x22d3ee, transparent: true, opacity: 0.55 }));
+          var wireEmgMat = trackMat(new THREE.MeshBasicMaterial({ color: 0xa855f7, transparent: true, opacity: 0.42 }));
+
+          var sensorMeshes = [];
+          var qusGeo = trackGeo(new THREE.CylinderGeometry(0.017, 0.017, 0.014, 16));
+          var emgGeo = trackGeo(new THREE.BoxGeometry(0.018, 0.026, 0.01));
+
+          SENSOR_CATALOG.forEach(function (s, idx) {
+            var isQus = s.type === 'QUS';
+            var mesh = new THREE.Mesh(isQus ? qusGeo : emgGeo, isQus ? qusMat : emgMat);
+            mesh.position.set(s.pos[0], s.pos[1], s.pos[2]);
+            if (isQus) mesh.rotation.x = Math.PI / 2;
+            mesh.userData.sensorId = s.id;
+            mesh.userData.boneId = s.boneId;
+            sensorGroup.add(mesh);
+            sensorMeshes.push(mesh);
+
+            // Route thin diagnostic lead curves for QUS probes & major EMG buses
+            if (isQus || idx % 3 === 0) {
+              var midX = (s.pos[0] + 0) * 0.52 + (s.pos[0] >= 0 ? 0.03 : -0.03);
+              var midY = (s.pos[1] + 1.29) * 0.5;
+              var curve = new THREE.CatmullRomCurve3([
+                new THREE.Vector3(0, 1.29, 0.12),
+                new THREE.Vector3(midX, midY, 0.105),
+                new THREE.Vector3(s.pos[0], s.pos[1], s.pos[2]),
+              ]);
+              var tubeGeo = trackGeo(new THREE.TubeGeometry(curve, 14, 0.0026, 6, false));
+              sensorGroup.add(new THREE.Mesh(tubeGeo, isQus ? wireQusMat : wireEmgMat));
+            }
+          });
+
+          // Animated Glowing Cyan Ultrasound Scan Sweep Ring
+          var scanRingMat = trackMat(new THREE.MeshBasicMaterial({
+            color: 0x22d3ee,
+            transparent: true,
+            opacity: 0,
+            side: THREE.DoubleSide,
+            depthWrite: false,
+          }));
+          var scanRing = new THREE.Mesh(trackGeo(new THREE.TorusGeometry(0.46, 0.009, 12, 48)), scanRingMat);
+          scanRing.rotation.x = Math.PI / 2;
+          scanRing.visible = false;
+          scene.add(scanRing);
+
+          var scanActive = false;
+          var scanProgress = 0;
+
+          // Sync Bone Colors & View Mode
+          function syncVisuals() {
+            var selected = state.skelSelectedBone;
+            BONE_CATALOG.forEach(function (b) {
+              var mat = boneMaterials[b.id];
+              var cat = getBoneCategory(state.skelWeakness[b.id]);
+              mat.color.set(cat.color);
+              if (b.id === selected) {
+                mat.emissive.set(cat.key === 'empty' ? 0x06b6d4 : cat.color);
+                mat.emissiveIntensity = 0.42;
+              } else if (cat.key === 'critical') {
+                mat.emissive.set(0x7f1d1d);
+                mat.emissiveIntensity = 0.25;
+              } else {
+                mat.emissive.setHex(0x000000);
+                mat.emissiveIntensity = 0;
+              }
+            });
+
+            var isXray = state.skelViewMode === 'xray';
+            var isFull = state.skelViewMode === 'full';
+            suitMaterial.opacity = isFull ? 0.94 : isXray ? 0.22 : 0.34;
+            suitMaterial.depthWrite = isFull;
+            suitMaterial.needsUpdate = true;
+            requestRender();
+          }
+
+          // Camera Preset Transition & Suit Explode Targets
+          var camAnim = {
+            active: false,
+            pos: new THREE.Vector3(),
+            target: new THREE.Vector3(),
+          };
+
+          function setPreset(key) {
+            var p = CAMERA_PRESETS[key];
+            if (!p) return;
+            camAnim.pos.set(p.pos[0], p.pos[1], p.pos[2]);
+            camAnim.target.set(p.target[0], p.target[1], p.target[2]);
+            camAnim.active = true;
+            requestRender();
+          }
+
+          controls.addEventListener('start', function () {
+            camAnim.active = false;
+            requestRender();
+          });
+          controls.addEventListener('change', function () {
+            requestRender();
+          });
+
+          // Raycasting for Bone/Sensor Hover & Selection
+          var raycaster = new THREE.Raycaster();
+          var pointer = new THREE.Vector2();
+          var lastMoveTime = 0;
+          var pointerDownPos = { x: 0, y: 0 };
+
+          function updatePointer(ev) {
+            var rect = renderer.domElement.getBoundingClientRect();
+            pointer.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
+            pointer.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
+          }
+
+          function onPointerDown(ev) {
+            pointerDownPos.x = ev.clientX;
+            pointerDownPos.y = ev.clientY;
+          }
+
+          function onPointerMove(ev) {
+            var now = Date.now();
+            if (now - lastMoveTime < 35) return;
+            lastMoveTime = now;
+            updatePointer(ev);
+            raycaster.setFromCamera(pointer, camera);
+            var targets = boneMeshes.concat(sensorMeshes);
+            var hits = raycaster.intersectObjects(targets, false);
+            if (hits.length > 0 && hits[0].object.userData.boneId) {
+              var bid = hits[0].object.userData.boneId;
+              var sid = hits[0].object.userData.sensorId;
+              var boneMeta = BONE_CATALOG.find(function (b) { return b.id === bid; });
+              var w = state.skelWeakness[bid];
+              var text = (sid ? sid + ' · ' : '') + (boneMeta ? boneMeta.label : bid) + (w !== undefined && w !== null ? ' · ' + w + '%' : ' · Unassessed');
+              renderer.domElement.style.cursor = 'pointer';
+              if (tooltipEl) {
+                var rect = mountEl.getBoundingClientRect();
+                tooltipEl.textContent = text;
+                tooltipEl.style.left = Math.min(rect.width - 180, Math.max(10, ev.clientX - rect.left + 12)) + 'px';
+                tooltipEl.style.top = Math.max(10, ev.clientY - rect.top - 28) + 'px';
+                tooltipEl.hidden = false;
+              }
+            } else {
+              renderer.domElement.style.cursor = 'grab';
+              if (tooltipEl) tooltipEl.hidden = true;
+            }
+          }
+
+          function onPointerUp(ev) {
+            var dx = ev.clientX - pointerDownPos.x;
+            var dy = ev.clientY - pointerDownPos.y;
+            if (dx * dx + dy * dy > 25) return; // Ignore orbit drags
+            updatePointer(ev);
+            raycaster.setFromCamera(pointer, camera);
+            var hits = raycaster.intersectObjects(boneMeshes.concat(sensorMeshes), false);
+            if (hits.length > 0 && hits[0].object.userData.boneId) {
+              state.skelSelectedBone = hits[0].object.userData.boneId;
+              if (hits[0].object.userData.sensorId) {
+                state.skelSelectedSensor = hits[0].object.userData.sensorId;
+              }
+              syncVisuals();
+              renderSkeletonDrawer();
+            }
+          }
+
+          renderer.domElement.addEventListener('pointerdown', onPointerDown);
+          renderer.domElement.addEventListener('pointermove', onPointerMove);
+          renderer.domElement.addEventListener('pointerup', onPointerUp);
+
+          function onResize() {
+            if (!mountEl || mountEl.clientWidth === 0) return;
+            var w = mountEl.clientWidth;
+            var h = mountEl.clientHeight;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+            requestRender();
+          }
+          window.addEventListener('resize', onResize);
+
+          // Pre-warm shaders once on hardware GPUs
+          if (!isSoftwareGl) {
+            renderer.compile(scene, camera);
+          }
+
+          // Render-on-Demand & Damped Animation Loop
+          var frameId = 0;
+          var renderBusy = false;
+          var renderDirty = false;
+          var prevTime = performance.now();
+          var disposed = false;
+
+          function afterDraw(cb) {
+            var gl = renderer.getContext();
+            var sync = gl && gl.fenceSync ? gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0) : null;
+            if (!sync) {
+              frameId = window.setTimeout(cb, 80);
+              return;
+            }
+            gl.flush();
+            function poll() {
+              if (disposed) return;
+              var st = gl.getSyncParameter(sync, gl.SYNC_STATUS);
+              if (st === gl.UNSIGNALED) {
+                frameId = window.setTimeout(poll, 5);
+              } else {
+                gl.deleteSync(sync);
+                frameId = window.setTimeout(cb, 80);
+              }
+            }
+            frameId = window.setTimeout(poll, 5);
+          }
+
+          function requestRender() {
+            if (disposed) return;
+            if (renderBusy) {
+              renderDirty = true;
+              return;
+            }
+            renderBusy = true;
+            frameId = window.requestAnimationFrame(function (now) {
+              if (disposed) return;
+              renderDirty = false;
+              var dt = Math.min(0.05, Math.max(0.001, (now - prevTime) / 1000));
+              prevTime = now;
+
+              var needsMore = false;
+              var explodeFactor = state.skelViewMode === 'exploded' ? 1 : 0;
+
+              suitPanels.forEach(function (sp) {
+                var tx = sp.base[0] + sp.explode[0] * explodeFactor;
+                var ty = sp.base[1] + sp.explode[1] * explodeFactor;
+                var tz = sp.base[2] + sp.explode[2] * explodeFactor;
+                if (
+                  Math.abs(sp.mesh.position.x - tx) > 0.002 ||
+                  Math.abs(sp.mesh.position.y - ty) > 0.002 ||
+                  Math.abs(sp.mesh.position.z - tz) > 0.002
+                ) {
+                  sp.mesh.position.x = THREE.MathUtils.damp(sp.mesh.position.x, tx, 7.5, dt);
+                  sp.mesh.position.y = THREE.MathUtils.damp(sp.mesh.position.y, ty, 7.5, dt);
+                  sp.mesh.position.z = THREE.MathUtils.damp(sp.mesh.position.z, tz, 7.5, dt);
+                  needsMore = true;
+                }
+              });
+
+              if (camAnim.active) {
+                camera.position.x = THREE.MathUtils.damp(camera.position.x, camAnim.pos.x, 7, dt);
+                camera.position.y = THREE.MathUtils.damp(camera.position.y, camAnim.pos.y, 7, dt);
+                camera.position.z = THREE.MathUtils.damp(camera.position.z, camAnim.pos.z, 7, dt);
+                controls.target.x = THREE.MathUtils.damp(controls.target.x, camAnim.target.x, 7, dt);
+                controls.target.y = THREE.MathUtils.damp(controls.target.y, camAnim.target.y, 7, dt);
+                controls.target.z = THREE.MathUtils.damp(controls.target.z, camAnim.target.z, 7, dt);
+                if (camera.position.distanceTo(camAnim.pos) < 0.015) {
+                  camAnim.active = false;
+                } else {
+                  needsMore = true;
+                }
+              }
+
+              if (scanActive) {
+                scanProgress += dt * 0.48;
+                if (scanProgress >= 1) {
+                  scanActive = false;
+                  scanRing.visible = false;
+                  scanRingMat.opacity = 0;
+                } else {
+                  var wave = Math.sin(scanProgress * Math.PI);
+                  scanRing.visible = true;
+                  scanRing.position.y = 0.14 + wave * 1.76;
+                  scanRingMat.opacity = 0.85 * Math.sin(scanProgress * Math.PI);
+                  needsMore = true;
+                }
+              }
+
+              if (controls.update() || needsMore) {
+                renderDirty = true;
+              }
+
+              renderer.render(scene, camera);
+
+              function done() {
+                renderBusy = false;
+                if (renderDirty && !disposed) requestRender();
+              }
+              if (isSoftwareGl) afterDraw(done);
+              else done();
+            });
+          }
+
+          syncVisuals();
+
+          skelController = {
+            syncVisuals: syncVisuals,
+            setPreset: setPreset,
+            triggerScan: function () {
+              scanActive = true;
+              scanProgress = 0;
+              requestRender();
+            },
+            dispose: function () {
+              disposed = true;
+              window.cancelAnimationFrame(frameId);
+              window.clearTimeout(frameId);
+              window.removeEventListener('resize', onResize);
+              renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+              renderer.domElement.removeEventListener('pointermove', onPointerMove);
+              renderer.domElement.removeEventListener('pointerup', onPointerUp);
+              controls.dispose();
+              disposables.geometries.forEach(function (g) { g.dispose(); });
+              disposables.materials.forEach(function (m) { m.dispose(); });
+              disposables.textures.forEach(function (t) { t.dispose(); });
+              envRT.dispose();
+              renderer.dispose();
+            },
+          };
+        }
+
+        function renderSkeletonDrawer() {
+          var bodyEl = document.getElementById('skel-drawer-body');
+          var tabBones = document.getElementById('skel-tab-bones');
+          var tabSensors = document.getElementById('skel-tab-sensors');
+          if (!bodyEl) return;
+
+          if (tabBones) tabBones.classList.toggle('is-active', state.skelDrawerTab === 'bones');
+          if (tabSensors) tabSensors.classList.toggle('is-active', state.skelDrawerTab === 'sensors');
+
+          if (state.skelDrawerTab === 'sensors') {
+            bodyEl.innerHTML =
+              '<p class="field-hint" style="margin-bottom:4px;">30 Suit Sensors · 8 Cyan QUS Transducers + 22 Violet EMG Muscle Channels (click a channel to inspect its linked bone)</p>' +
+              SENSOR_CATALOG.map(function (s) {
+                var isSelected = state.skelSelectedSensor === s.id;
+                var badgeColor = s.type === 'QUS' ? '#22d3ee' : '#c084fc';
+                return (
+                  '<div class="skel-sensor-card" data-sensor-pick="' + escapeHtml(s.id) + '" data-sensor-bone="' + escapeHtml(s.boneId) + '" style="' + (isSelected ? 'border-color:rgba(34,211,238,0.65);background:rgba(6,182,212,0.09);' : '') + '">' +
+                    '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">' +
+                      '<span class="mono-val" style="font-size:0.76rem;font-weight:600;color:' + badgeColor + ';">' + escapeHtml(s.id) + '</span>' +
+                      '<span class="mono-val" style="font-size:0.7rem;color:var(--text-muted);">' + escapeHtml(s.boneId) + '</span>' +
+                    '</div>' +
+                    '<p style="margin:4px 0 0;font-size:0.78rem;color:#e2e8f0;">' + escapeHtml(s.label) + '</p>' +
+                  '</div>'
+                );
+              }).join('');
+          } else {
+            var selBone = BONE_CATALOG.find(function (b) { return b.id === state.skelSelectedBone; }) || BONE_CATALOG[0];
+            var selVal = state.skelWeakness[selBone.id];
+            var hasSelVal = selVal !== undefined && selVal !== null && isFinite(Number(selVal));
+            var selCat = getBoneCategory(selVal);
+            var selTel = computeBoneTelemetry(selBone.id, selVal);
+
+            var rowsHtml = BONE_CATALOG.map(function (b) {
+              var w = state.skelWeakness[b.id];
+              var hasW = w !== undefined && w !== null && isFinite(Number(w));
+              var cat = getBoneCategory(w);
+              var isSel = b.id === selBone.id;
+              return (
+                '<div class="skel-bone-row' + (isSel ? ' is-selected' : '') + '" data-bone-pick="' + escapeHtml(b.id) + '">' +
+                  '<div class="skel-bone-label">' +
+                    '<span class="skel-swatch" style="background:' + cat.color + ';"></span>' +
+                    '<span title="' + escapeHtml(b.label) + '">' + escapeHtml(b.label) + '</span>' +
+                  '</div>' +
+                  '<div class="skel-pct-wrap">' +
+                    '<input type="number" min="0" max="100" step="1" class="skel-pct-input" data-bone-input="' + escapeHtml(b.id) + '" value="' + (hasW ? escapeHtml(w) : '') + '" placeholder="—" />' +
+                    '<span style="font-size:0.7rem;color:var(--text-muted);">%</span>' +
+                  '</div>' +
+                  '<span class="mono-val" style="font-size:0.72rem;color:' + cat.color + ';text-align:right;">' + cat.color + '</span>' +
+                '</div>'
+              );
+            }).join('');
+
+            bodyEl.innerHTML =
+              '<div class="skel-selected-box">' +
+                '<div class="skel-selected-top">' +
+                  '<h3 class="skel-selected-name">' + escapeHtml(selBone.label) + '</h3>' +
+                  '<span class="skel-color-code" style="color:' + selCat.color + ';">' +
+                    '<span class="skel-swatch" style="background:' + selCat.color + ';"></span>' +
+                    escapeHtml(selCat.label) +
+                  '</span>' +
+                '</div>' +
+                '<div class="skel-slider-row">' +
+                  '<input id="skel-sel-slider" type="range" min="0" max="100" step="1" value="' + (hasSelVal ? Number(selVal) : 0) + '" />' +
+                  '<span class="mono-val" style="min-width:44px;text-align:right;font-size:0.8rem;">' + (hasSelVal ? selVal + '%' : '—') + '</span>' +
+                  '<button type="button" id="skel-sel-clear" class="skel-chip" style="border-color:rgba(255,255,255,0.14);">Clear</button>' +
+                '</div>' +
+                '<p class="field-hint mono-val" style="font-size:0.7rem;">Linked: ' + escapeHtml(selBone.sensors.join(' · ')) + '</p>' +
+                '<div class="skel-metrics-mini">' +
+                  '<div class="skel-metric-mini"><p class="lbl">SOS</p><p class="val">' + escapeHtml(selTel.sos) + '</p></div>' +
+                  '<div class="skel-metric-mini"><p class="lbl">BUA</p><p class="val">' + escapeHtml(selTel.bua) + '</p></div>' +
+                  '<div class="skel-metric-mini"><p class="lbl">T-Score</p><p class="val">' + escapeHtml(selTel.tScore) + '</p></div>' +
+                '</div>' +
+              '</div>' +
+              '<div class="skel-bone-list">' + rowsHtml + '</div>';
+          }
+
+          updateSkeletonHud();
+        }
+
+        function updateSkeletonHud() {
+          var hudEl = document.getElementById('skel-hud-card');
+          if (!hudEl) return;
+          var counts = countBoneStates();
+          var assessedCount = 18 - counts.empty;
+          var legendHtml = assessedCount === 0
+            ? '<p class="skel-hud-note">Dataset slot is empty. Load your JSON/CSV dataset or click Sample Dataset to compute weakness % and bone color.</p>'
+            : '<p class="skel-hud-legend">' +
+                '<span style="color:#10B981;">Healthy (&lt;18%) (' + counts.healthy + ')</span> · ' +
+                '<span style="color:#F59E0B;">Moderate (18–37%) (' + counts.moderate + ')</span> · ' +
+                '<span style="color:#EF4444;">Critical (&ge;38%) (' + counts.critical + ')</span>' +
+              '</p>';
+
+          var coachSyncBtn = state.coachResult
+            ? '<button type="button" id="hud-sync-coach" class="skel-btn">Apply Coach Scan</button>'
+            : '';
+
+          hudEl.innerHTML =
+            '<p class="skel-hud-stats">30 Sensors / 8 QUS · 22 EMG (11×2 Ch)</p>' +
+            legendHtml +
+            '<div class="skel-hud-btns">' +
+              '<button type="button" id="hud-open-dataset" class="skel-btn is-cyan">Insert / Edit Dataset</button>' +
+              '<button type="button" id="hud-load-sample" class="skel-btn">Sample Dataset</button>' +
+              coachSyncBtn +
+            '</div>';
+
+          var btnDs = document.getElementById('hud-open-dataset');
+          if (btnDs) btnDs.onclick = openDatasetModal;
+          var btnSample = document.getElementById('hud-load-sample');
+          if (btnSample) btnSample.onclick = loadSampleSkeletonDataset;
+          var btnSync = document.getElementById('hud-sync-coach');
+          if (btnSync) btnSync.onclick = syncCoachResultToSkeleton;
+        }
+
+        function syncCoachResultToSkeleton() {
+          if (!state.coachResult) return;
+          var tScore = Number(state.coachResult.t_score);
+          var estWeak = isFinite(tScore) ? Math.round(Math.max(4, Math.min(92, (-tScore + 0.6) / 0.056))) : 36;
+          state.skelWeakness['calcaneus-right'] = estWeak;
+          state.skelWeakness['femur-right'] = Math.min(100, estWeak + 4);
+          state.skelCustomMetrics['calcaneus-right'] = {
+            sos: Number(state.coachResult.sos) || null,
+            bua: Number(state.coachResult.bua) || null,
+          };
+          state.skelSelectedBone = 'calcaneus-right';
+          if (skelController) skelController.syncVisuals();
+          renderSkeletonDrawer();
+        }
+
+        function loadSampleSkeletonDataset() {
+          applyDatasetText(SAMPLE_DATASET_TEXT);
+          if (skelController) skelController.syncVisuals();
+          renderSkeletonDrawer();
+        }
+
+        function openDatasetModal() {
+          var modal = document.getElementById('skel-dataset-modal');
+          var textarea = document.getElementById('skel-dataset-textarea');
+          var errBox = document.getElementById('skel-dataset-error');
+          if (!modal || !textarea) return;
+          var lines = [];
+          BONE_CATALOG.forEach(function (b) {
+            if (state.skelWeakness[b.id] !== undefined && state.skelWeakness[b.id] !== null) {
+              var m = state.skelCustomMetrics[b.id];
+              lines.push(
+                b.id + ',' + state.skelWeakness[b.id] +
+                (m && m.sos ? ',' + m.sos : '') +
+                (m && m.bua ? ',' + m.bua : '')
+              );
+            }
+          });
+          textarea.value = lines.length ? lines.join('\n') : state.skelDatasetDraft;
+          if (errBox) {
+            errBox.textContent = '';
+            errBox.hidden = true;
+          }
+          modal.hidden = false;
+        }
+
+        function renderSkeletonsContent() {
+          var presetButtonsHtml = Object.keys(CAMERA_PRESETS).map(function (key) {
+            var active = state.skelPreset === key ? ' is-active' : '';
+            return '<button type="button" class="skel-chip' + active + '" data-cam-preset="' + key + '">' + escapeHtml(CAMERA_PRESETS[key].label) + '</button>';
+          }).join('');
+
+          return (
+            '<div class="skel-shell pop-animate">' +
+              '<div class="skel-topbar">' +
+                '<div>' +
+                  '<div class="skel-title-row">' +
+                    '<h1 class="skel-heading">My Skeleton</h1>' +
+                  '</div>' +
+                  '<p class="skel-submeta">3D Musculoskeletal Suit Twin · 18 Anatomical Bones · 30 Telemetry Sensors (8 QUS + 22 EMG)</p>' +
+                '</div>' +
+                '<div class="skel-actions">' +
+                  '<button type="button" id="skel-top-dataset" class="skel-btn">Bone Dataset Input</button>' +
+                  '<button type="button" id="skel-run-scan" class="skel-btn is-scan">Run Ultrasound Scan</button>' +
+                  '<button type="button" class="skel-btn" data-route="orbit">Back to orbit</button>' +
+                '</div>' +
+              '</div>' +
+              '<div class="skel-workspace">' +
+                '<div class="skel-viewport-wrap">' +
+                  '<div id="skel-canvas-mount" class="skel-canvas-mount">' +
+                    '<p class="panel-subtitle" style="padding:24px;">Initializing 3D Skeleton &amp; Smart Suit viewport...</p>' +
+                  '</div>' +
+                  '<div id="skel-hud-card" class="skel-hud-card"></div>' +
+                  '<div id="skel-tooltip" class="skel-tooltip" hidden></div>' +
+                  '<div class="skel-dock-wrap">' +
+                    '<button type="button" id="skel-dock-toggle" class="skel-dock-toggle">' + (state.skelDockCollapsed ? '▴ Show Dock' : '▾ Hide Dock') + '</button>' +
+                    '<div id="skel-dock" class="skel-dock' + (state.skelDockCollapsed ? ' is-hidden' : '') + '">' +
+                      '<button type="button" class="skel-chip' + (state.skelViewMode === 'full' ? ' is-active' : '') + '" data-view-mode="full">Full Suit</button>' +
+                      '<button type="button" class="skel-chip' + (state.skelViewMode === 'xray' ? ' is-active' : '') + '" data-view-mode="xray">X-Ray Skeleton</button>' +
+                      '<button type="button" class="skel-chip' + (state.skelViewMode === 'exploded' ? ' is-active' : '') + '" data-view-mode="exploded">Exploded View</button>' +
+                      '<span class="skel-dock-sep" aria-hidden="true"></span>' +
+                      presetButtonsHtml +
+                    '</div>' +
+                  '</div>' +
+                '</div>' +
+                '<aside class="skel-drawer" aria-label="Anatomical Skeleton & Sensor Inspector">' +
+                  '<div class="skel-drawer-tabs">' +
+                    '<button type="button" id="skel-tab-bones" class="skel-drawer-tab is-active">Anatomical Skeleton (18)</button>' +
+                    '<button type="button" id="skel-tab-sensors" class="skel-drawer-tab">QUS + EMG Sensors (30)</button>' +
+                  '</div>' +
+                  '<div id="skel-drawer-body" class="skel-drawer-body"></div>' +
+                '</aside>' +
+              '</div>' +
+            '</div>' +
+            '<div id="skel-dataset-modal" class="skel-modal-backdrop" hidden>' +
+              '<div class="skel-modal" role="dialog" aria-modal="true" aria-labelledby="skel-modal-title">' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">' +
+                  '<h2 id="skel-modal-title" style="margin:0;font-family:var(--font-display);font-size:1.2rem;color:#fff;">Bone Weakness Dataset Input</h2>' +
+                  '<button type="button" id="skel-modal-close" class="skel-chip" style="border-color:rgba(255,255,255,0.16);">Close</button>' +
+                '</div>' +
+                '<p class="field-hint">Paste JSON or CSV (<span class="mono-val">boneId,weaknessPercent,sosMs,buaDbMhz</span>) or load sample measurements.</p>' +
+                '<div class="actions-group">' +
+                  '<label class="skel-btn" style="cursor:pointer;">Upload JSON / CSV<input id="skel-file-upload" type="file" accept=".json,.csv,.txt" hidden /></label>' +
+                  '<button type="button" id="skel-modal-sample" class="skel-btn is-cyan">Load Sample Dataset</button>' +
+                  '<button type="button" id="skel-modal-clear" class="skel-btn">Clear to Empty Slot</button>' +
+                '</div>' +
+                '<textarea id="skel-dataset-textarea" class="skel-textarea" placeholder="femur-right,55,1468,44&#10;lumbar-spine,28,1532,62&#10;calcaneus-right,58,1459,41"></textarea>' +
+                '<div id="skel-dataset-error" class="error-box" style="margin-top:0;" hidden></div>' +
+                '<div style="display:flex;justify-content:flex-end;gap:10px;">' +
+                  '<button type="button" id="skel-modal-cancel" class="btn-secondary">Cancel</button>' +
+                  '<button type="button" id="skel-modal-apply" class="skel-btn is-scan">Apply Dataset to Skeleton</button>' +
+                '</div>' +
+              '</div>' +
+            '</div>'
+          );
+        }
+
+        function attachSkeletonHandlers() {
+          renderSkeletonDrawer();
+
+          var mountEl = document.getElementById('skel-canvas-mount');
+          var tooltipEl = document.getElementById('skel-tooltip');
+          ensureThreeLoaded()
+            .then(function () {
+              if (state.route === 'skeletons' && document.getElementById('skel-canvas-mount') === mountEl) {
+                mountSkeletonScene(mountEl, tooltipEl);
+              }
+            })
+            .catch(function (err) {
+              if (mountEl) {
+                mountEl.innerHTML = '<div class="error-box" style="margin:24px;">' + escapeHtml(err.message) + '</div>';
+              }
+            });
+
+          var btnTopDataset = document.getElementById('skel-top-dataset');
+          if (btnTopDataset) btnTopDataset.onclick = openDatasetModal;
+
+          var btnRunScan = document.getElementById('skel-run-scan');
+          if (btnRunScan) {
+            btnRunScan.onclick = function () {
+              if (skelController) skelController.triggerScan();
+            };
+          }
+
+          var dockToggle = document.getElementById('skel-dock-toggle');
+          var dockEl = document.getElementById('skel-dock');
+          if (dockToggle && dockEl) {
+            dockToggle.onclick = function () {
+              state.skelDockCollapsed = !state.skelDockCollapsed;
+              dockEl.classList.toggle('is-hidden', state.skelDockCollapsed);
+              dockToggle.textContent = state.skelDockCollapsed ? '▴ Show Dock' : '▾ Hide Dock';
+            };
+          }
+
+          document.querySelectorAll('[data-view-mode]').forEach(function (btn) {
+            btn.onclick = function () {
+              state.skelViewMode = btn.getAttribute('data-view-mode');
+              document.querySelectorAll('[data-view-mode]').forEach(function (b) {
+                b.classList.toggle('is-active', b === btn);
+              });
+              if (skelController) skelController.syncVisuals();
+            };
+          });
+
+          document.querySelectorAll('[data-cam-preset]').forEach(function (btn) {
+            btn.onclick = function () {
+              var key = btn.getAttribute('data-cam-preset');
+              state.skelPreset = key;
+              document.querySelectorAll('[data-cam-preset]').forEach(function (b) {
+                b.classList.toggle('is-active', b === btn);
+              });
+              if (skelController) skelController.setPreset(key);
+            };
+          });
+
+          var tabBones = document.getElementById('skel-tab-bones');
+          if (tabBones) {
+            tabBones.onclick = function () {
+              state.skelDrawerTab = 'bones';
+              renderSkeletonDrawer();
+            };
+          }
+          var tabSensors = document.getElementById('skel-tab-sensors');
+          if (tabSensors) {
+            tabSensors.onclick = function () {
+              state.skelDrawerTab = 'sensors';
+              renderSkeletonDrawer();
+            };
+          }
+
+          var drawerBody = document.getElementById('skel-drawer-body');
+          if (drawerBody) {
+            drawerBody.addEventListener('click', function (e) {
+              if (e.target.matches('[data-bone-input]')) return;
+              if (e.target.id === 'skel-sel-clear') {
+                delete state.skelWeakness[state.skelSelectedBone];
+                if (skelController) skelController.syncVisuals();
+                renderSkeletonDrawer();
+                return;
+              }
+              var boneRow = e.target.closest('[data-bone-pick]');
+              if (boneRow) {
+                state.skelSelectedBone = boneRow.getAttribute('data-bone-pick');
+                if (skelController) skelController.syncVisuals();
+                renderSkeletonDrawer();
+                return;
+              }
+              var sensorRow = e.target.closest('[data-sensor-pick]');
+              if (sensorRow) {
+                state.skelSelectedSensor = sensorRow.getAttribute('data-sensor-pick');
+                state.skelSelectedBone = sensorRow.getAttribute('data-sensor-bone');
+                if (skelController) skelController.syncVisuals();
+                renderSkeletonDrawer();
+              }
+            });
+
+            drawerBody.addEventListener('input', function (e) {
+              if (e.target.id === 'skel-sel-slider') {
+                var val = Math.max(0, Math.min(100, Number(e.target.value)));
+                state.skelWeakness[state.skelSelectedBone] = val;
+                if (skelController) skelController.syncVisuals();
+                renderSkeletonDrawer();
+              } else if (e.target.matches('[data-bone-input]')) {
+                var bid = e.target.getAttribute('data-bone-input');
+                var raw = String(e.target.value || '').trim();
+                if (!raw) {
+                  delete state.skelWeakness[bid];
+                } else {
+                  var num = Math.max(0, Math.min(100, Math.round(Number(raw))));
+                  if (isFinite(num)) state.skelWeakness[bid] = num;
+                }
+                state.skelSelectedBone = bid;
+                if (skelController) skelController.syncVisuals();
+                updateSkeletonHud();
+              }
+            });
+
+            drawerBody.addEventListener('change', function (e) {
+              if (e.target.matches('[data-bone-input]')) {
+                renderSkeletonDrawer();
+              }
+            });
+          }
+
+          // Dataset Modal Handlers
+          var modal = document.getElementById('skel-dataset-modal');
+          var textarea = document.getElementById('skel-dataset-textarea');
+          var errBox = document.getElementById('skel-dataset-error');
+          function closeDatasetModal() {
+            if (modal) modal.hidden = true;
+          }
+
+          ['skel-modal-close', 'skel-modal-cancel'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.onclick = closeDatasetModal;
+          });
+
+          var btnModalSample = document.getElementById('skel-modal-sample');
+          if (btnModalSample && textarea) {
+            btnModalSample.onclick = function () {
+              textarea.value = SAMPLE_DATASET_TEXT;
+              state.skelDatasetDraft = SAMPLE_DATASET_TEXT;
+            };
+          }
+
+          var btnModalClear = document.getElementById('skel-modal-clear');
+          if (btnModalClear && textarea) {
+            btnModalClear.onclick = function () {
+              textarea.value = '';
+              state.skelDatasetDraft = '';
+            };
+          }
+
+          var fileInp = document.getElementById('skel-file-upload');
+          if (fileInp && textarea) {
+            fileInp.onchange = function (ev) {
+              var file = ev.target.files && ev.target.files[0];
+              if (!file) return;
+              var reader = new FileReader();
+              reader.onload = function () {
+                textarea.value = String(reader.result || '');
+                state.skelDatasetDraft = textarea.value;
+              };
+              reader.readAsText(file);
+            };
+          }
+
+          var btnApply = document.getElementById('skel-modal-apply');
+          if (btnApply && textarea) {
+            btnApply.onclick = function () {
+              state.skelDatasetDraft = textarea.value;
+              var ok = applyDatasetText(textarea.value);
+              if (!ok) {
+                if (errBox) {
+                  errBox.textContent = state.skelDatasetError;
+                  errBox.hidden = false;
+                }
+                return;
+              }
+              closeDatasetModal();
+              if (skelController) skelController.syncVisuals();
+              renderSkeletonDrawer();
+            };
+          }
+        }
+
+        function renderContactContent() {
+          return (
+            '<div class="glass-panel pop-animate">' +
+              '<h1 class="panel-title">Contact Us</h1>' +
+              '<p class="panel-subtitle">Direct medical telemetry desk &amp; mission support for Mascu-Skeletal Diagnosis.</p>' +
+              '<div class="panel-divider form-stack">' +
+                '<div class="contact-item">' +
+                  '<div style="min-width:0;">' +
+                    '<p class="metric-label">Support Email</p>' +
+                    '<a class="contact-link" href="mailto:support@mascuskeletal-med.org">support@mascuskeletal-med.org</a>' +
+                  '</div>' +
+                  '<button type="button" class="btn-secondary" data-copy="support@mascuskeletal-med.org">Copy</button>' +
+                '</div>' +
+                '<div class="contact-item">' +
+                  '<div style="min-width:0;">' +
+                    '<p class="metric-label">Mission Phone Number</p>' +
+                    '<a class="contact-link" href="tel:+12815550194">+1 (281) 555-0194</a>' +
+                  '</div>' +
+                  '<button type="button" class="btn-secondary" data-copy="+1 (281) 555-0194">Copy</button>' +
+                '</div>' +
+              '</div>' +
+              '<div class="panel-divider actions-group">' +
+                '<button type="button" class="btn-primary" data-route="orbit">' +
+                  '<svg class="icon text-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+                    '<path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path>' +
+                  '</svg>' +
+                  'Back to orbit' +
+                '</button>' +
+              '</div>' +
+            '</div>'
+          );
+        }
+
+        function attachContactHandlers() {
+          document.querySelectorAll('[data-copy]').forEach(function (btn) {
+            btn.onclick = function () {
+              var val = btn.getAttribute('data-copy');
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(val).catch(function () {});
+              }
+              btn.textContent = 'Copied';
+              window.setTimeout(function () {
+                btn.textContent = 'Copy';
+              }, 1600);
+            };
+          });
+        }
+
+        function render() {
+          var isOrbit = state.route === 'orbit';
+          var isContact = state.route === 'contact';
+          if (state.route !== 'skeletons') {
+            disposeSkeletonScene();
+          }
+
+          viewOrbit.hidden = !isOrbit;
+          viewModule.hidden = isOrbit;
+          pageScrim.classList.toggle('is-active', !isOrbit && !isContact);
+          contactAstronautAnchor.hidden = !isContact;
+          moduleBody.classList.toggle('is-wide', state.route === 'coach' || state.route === 'doctors' || state.route === 'approval');
+          moduleBody.classList.toggle('is-contact', isContact);
+          moduleBody.classList.toggle('is-skeleton', state.route === 'skeletons');
+
+          if (!isOrbit) {
+            if (state.route === 'signin') {
+              moduleBody.innerHTML = renderSignInContent();
+              attachSignInHandlers();
+            } else if (state.route === 'skeletons') {
+              moduleBody.innerHTML = renderSkeletonsContent();
+              attachSkeletonHandlers();
+            } else if (state.route === 'coach') {
+              moduleBody.innerHTML = renderCoachContent();
+              attachCoachHandlers();
+            } else if (state.route === 'approval') {
+              moduleBody.innerHTML = renderApprovalContent();
+            } else if (state.route === 'doctors') {
+              moduleBody.innerHTML = renderDoctorsContent();
+              attachDoctorsHandlers();
+            } else if (state.route === 'contact') {
+              moduleBody.innerHTML = renderContactContent();
+              attachContactHandlers();
+            }
+          }
+        }
+
+        render();
+      })();
+    </script>
+  </body>
+</html>

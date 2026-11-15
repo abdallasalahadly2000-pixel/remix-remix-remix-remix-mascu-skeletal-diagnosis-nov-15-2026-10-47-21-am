@@ -1,0 +1,7 @@
+{
+  "npm.packageManager": "npm",
+  "liveServer.settings.root": "/",
+  "liveServer.settings.port": 5500,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "files.eol": "\n"
+}

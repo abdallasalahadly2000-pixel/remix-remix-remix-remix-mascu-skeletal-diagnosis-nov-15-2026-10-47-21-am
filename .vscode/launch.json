@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Mascu-Skeletal Diagnosis (Auto-Install + npm run dev)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "node -e \"const fs=require('fs'),cp=require('child_process');if(!fs.existsSync('node_modules'))cp.execSync('npm install',{stdio:'inherit'});\" && npm run dev",
+      "serverReadyAction": {
+        "pattern": "listening on http://[^:]+:([0-9]+)",
+        "uriFormat": "http://localhost:%s",
+        "action": "openExternally"
+      }
+    },
+    {
+      "name": "Build & Open Static Site (npm run build)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run build && npm run preview -- --port 3000",
+      "serverReadyAction": {
+        "pattern": "http://[^:]+:([0-9]+)",
+        "uriFormat": "http://localhost:%s",
+        "action": "openExternally"
+      }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+import { CrewReviewCase } from '../types/app';
+
+export const SEED_REVIEW_CASES: CrewReviewCase[] = [
+  {
+    id: 'case-vance-01',
+    astronautName: 'Elena Vance',
+    callsign: 'VANCE-01',
+    specialty: 'Mission Commander',
+    missionDays: 142,
+    sos: 1468.0,
+    bua: 44.0,
+    tScore: -2.7,
+    prediction: 'Osteoporosis',
+    confidence: 0.94,
+    clearanceStatus: 'intervention_required',
+    prescribedIntervention: 'Daily ARED Resistive Back Squat (4x8 @ 93 kg) + Calcaneal Heel Raise',
+    clinicalNotes:
+      'Femoral neck & calcaneus QUS indicate accelerated microgravity bone loss. EVA heavy-tool transfers paused pending 14-day EMG-verified countermeasure cycle.',
+    updatedAt: '2026-11-12T16:45:00Z',
+  },
+  {
+    id: 'case-kessler-04',
+    astronautName: 'Marcus Kessler',
+    callsign: 'KESSLER-04',
+    specialty: 'Flight Engineer',
+    missionDays: 118,
+    sos: 1515.0,
+    bua: 58.0,
+    tScore: -1.6,
+    prediction: 'Osteopenia',
+    confidence: 0.914,
+    clearanceStatus: 'pending',
+    prescribedIntervention: 'Increase ARED lower-body axial loading +15%; verify R/L EMG symmetry >= 85%.',
+    clinicalNotes:
+      'Awaiting Flight Surgeon review of Day 118 QUS telemetry sweep.',
+    updatedAt: '2026-11-12T11:20:00Z',
+  },
+  {
+    id: 'case-tanaka-02',
+    astronautName: 'Kenji Tanaka',
+    callsign: 'TANAKA-02',
+    specialty: 'Payload Specialist',
+    missionDays: 96,
+    sos: 1578.0,
+    bua: 79.0,
+    tScore: -0.35,
+    prediction: 'Normal',
+    confidence: 0.96,
+    clearanceStatus: 'cleared_for_eva',
+    prescribedIntervention: 'Continue baseline ARED resistive maintenance & standard Vitamin D3.',
+    clinicalNotes:
+      'All 18 skeletal zones within healthy <18% weakness range. Cleared for EVA-14.',
+    updatedAt: '2026-11-09T14:30:00Z',
+  },
+];

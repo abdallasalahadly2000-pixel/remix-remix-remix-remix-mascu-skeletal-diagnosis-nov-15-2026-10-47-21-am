@@ -1,0 +1,6 @@
+{
+  "summary":  "Implementation plan for Mascu-Skeletal Diagnosis: a space-medicine web application featuring a stationary Earth/Milky Way backdrop with an independently floating astronaut showing crimson osteoporotic bone loss, four themed mission navigation modules (00 Sign In, 01 Skeletons of the Crew, 02 Coach AI-Model, 03 Doctors Review), Firebase Authentication and Firestore persistence, and a server-side Gemini AI musculoskeletal coach.",
+  "updatedAt":  "2026-11-13T12:02:08.331552107Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

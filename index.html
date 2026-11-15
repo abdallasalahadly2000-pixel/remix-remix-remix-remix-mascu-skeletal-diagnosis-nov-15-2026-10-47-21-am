@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mascu-Skeletal Diagnosis</title>
+    <meta
+      name="description"
+      content="Orbital musculoskeletal health, 3D bone-density telemetry, physical treatment countermeasure coaching, and flight-surgeon crew review platform."
+    />
+    <meta property="og:title" content="Mascu-Skeletal Diagnosis" />
+    <meta
+      property="og:description"
+      content="Orbital musculoskeletal health, 3D bone-density telemetry, physical treatment countermeasure coaching, and flight-surgeon crew review platform."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-[#07090E] text-slate-100 antialiased selection:bg-cyan-500/30 selection:text-white">
+    <div id="root"></div>
+    <noscript>
+      <p>Please enable JavaScript to view Mascu-Skeletal Diagnosis.</p>
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      (function () {
+        var standaloneBooted = false;
+        function bootStandalone() {
+          if (standaloneBooted || window.__MSD_MOUNTED__) return;
+          var root = document.getElementById('root');
+          if (root && root.childElementCount > 0) return;
+          standaloneBooted = true;
+
+          var link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = './standalone/app.css';
+          document.head.appendChild(link);
+
+          var script = document.createElement('script');
+          script.src = './standalone/app.iife.js';
+          document.body.appendChild(script);
+        }
+
+        if (window.location.protocol === 'file:') {
+          bootStandalone();
+          return;
+        }
+
+        var moduleScript = document.querySelector('script[type="module"][src="/src/main.tsx"]');
+        if (moduleScript) {
+          var fallbackTimer = window.setTimeout(bootStandalone, 3000);
+          moduleScript.addEventListener('error', function () {
+            window.clearTimeout(fallbackTimer);
+            bootStandalone();
+          });
+          fetch('/src/main.tsx', { method: 'HEAD' })
+            .then(function (res) {
+              var ct = res.headers.get('content-type') || '';
+              if (res.ok && ct.indexOf('javascript') !== -1) {
+                window.clearTimeout(fallbackTimer);
+              } else {
+                window.clearTimeout(fallbackTimer);
+                bootStandalone();
+              }
+            })
+            .catch(function () {
+              window.clearTimeout(fallbackTimer);
+              bootStandalone();
+            });
+        }
+      })();
+    </script>
+  </body>
+</html>

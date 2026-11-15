@@ -1,0 +1,400 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Public mission profile for an authenticated Astronaut or Doctor without PII.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "role": {
+          "type": "string",
+          "description": "Mission portal role.",
+          "enum": ["astronaut", "doctor"]
+        },
+        "fullName": {
+          "type": "string",
+          "description": "Display name of the crew member or flight surgeon.",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "badgeId": {
+          "type": "string",
+          "description": "Mission badge or medical license identifier.",
+          "minLength": 1,
+          "maxLength": 40,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "specialty": {
+          "type": "string",
+          "description": "Crew or clinical specialty.",
+          "enum": [
+            "Mission Commander",
+            "Flight Engineer",
+            "Payload Specialist",
+            "Flight Surgeon",
+            "Orthopedic Specialist"
+          ]
+        },
+        "missionName": {
+          "type": "string",
+          "description": "Assigned orbital mission.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the profile was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the profile was last updated."
+        }
+      },
+      "required": [
+        "uid",
+        "role",
+        "fullName",
+        "badgeId",
+        "specialty",
+        "missionName",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UserPrivateInfo": {
+      "title": "UserPrivateInfo",
+      "description": "Isolated PII record containing the user's verified email address.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User email address isolated in private subcollection.",
+          "minLength": 3,
+          "maxLength": 254
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the private info was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the private info was last updated."
+        }
+      },
+      "required": ["uid", "email", "createdAt", "updatedAt"]
+    },
+    "DoctorAuthorization": {
+      "title": "DoctorAuthorization",
+      "description": "Trusted RBAC allowlist entry authorizing a user UID as a Doctor.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the authorized doctor.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "fullName": {
+          "type": "string",
+          "description": "Authorized doctor display name.",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "specialty": {
+          "type": "string",
+          "description": "Medical specialty.",
+          "enum": ["Flight Surgeon", "Orthopedic Specialist"]
+        },
+        "grantedBy": {
+          "type": "string",
+          "description": "Admin UID who granted doctor clearance.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when authorization was granted."
+        }
+      },
+      "required": ["uid", "fullName", "specialty", "grantedBy", "createdAt"]
+    },
+    "TreatmentPlan": {
+      "title": "TreatmentPlan",
+      "description": "QUS bone health assessment and physical treatment plan auto-dispatched to Doctor Approval.",
+      "type": "object",
+      "properties": {
+        "planCode": {
+          "type": "string",
+          "description": "Human-readable QUS assessment code.",
+          "minLength": 3,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the astronaut/user who generated the plan.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "assignedDoctorUid": {
+          "type": "string",
+          "description": "Optional UID of assigned doctor or unassigned.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "astronautName": {
+          "type": "string",
+          "description": "Name of the crew member.",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "astronautBadge": {
+          "type": "string",
+          "description": "Badge ID of the crew member.",
+          "minLength": 1,
+          "maxLength": 40,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "mode": {
+          "type": "string",
+          "description": "QUS measurement mode.",
+          "enum": ["dual", "full"]
+        },
+        "sos": {
+          "type": "number",
+          "description": "Calcaneal Speed of Sound in m/s."
+        },
+        "bua": {
+          "type": "number",
+          "description": "Broadband Ultrasound Attenuation in dB/MHz."
+        },
+        "unloadingMonths": {
+          "type": "number",
+          "description": "Months in microgravity unloading."
+        },
+        "prediction": {
+          "type": "string",
+          "description": "WHO diagnostic classification.",
+          "enum": ["Normal", "Osteopenia", "Osteoporosis"]
+        },
+        "confidence": {
+          "type": "number",
+          "description": "Model confidence score between 0 and 100."
+        },
+        "tScore": {
+          "type": "number",
+          "description": "Composite Z_master / T-score."
+        },
+        "bhi": {
+          "type": "number",
+          "description": "Unified Bone Health Index (0-100)."
+        },
+        "bdsPercent": {
+          "type": "number",
+          "description": "10-year fragility risk percentage."
+        },
+        "ebmd": {
+          "type": "number",
+          "description": "Estimated Heel BMD in g/cm2."
+        },
+        "clinicalTier": {
+          "type": "string",
+          "description": "Clinical tier summary.",
+          "minLength": 3,
+          "maxLength": 100
+        },
+        "recommendation": {
+          "type": "string",
+          "description": "Plain-language countermeasure protocol summary.",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "selectedBoneIds": {
+          "type": "array",
+          "description": "Target bone region IDs (1 to 15 regions)."
+        },
+        "severityLevel": {
+          "type": "string",
+          "description": "Exercise dosing severity level.",
+          "enum": ["L1", "L2", "L3", "L4"]
+        },
+        "approvalStatus": {
+          "type": "string",
+          "description": "Doctor approval workflow status.",
+          "enum": ["pending", "approved", "not_approved"]
+        },
+        "reviewedByUid": {
+          "type": "string",
+          "description": "UID of the doctor who finalized the decision.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "reviewedByName": {
+          "type": "string",
+          "description": "Display name of the reviewing doctor.",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the plan was generated and sent."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the plan was last updated."
+        }
+      },
+      "required": [
+        "planCode",
+        "ownerId",
+        "assignedDoctorUid",
+        "astronautName",
+        "astronautBadge",
+        "mode",
+        "sos",
+        "bua",
+        "unloadingMonths",
+        "prediction",
+        "confidence",
+        "tScore",
+        "bhi",
+        "bdsPercent",
+        "ebmd",
+        "clinicalTier",
+        "recommendation",
+        "selectedBoneIds",
+        "severityLevel",
+        "approvalStatus",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "TreatmentFeedback": {
+      "title": "TreatmentFeedback",
+      "description": "Doctor approval or revision review recorded against a TreatmentPlan.",
+      "type": "object",
+      "properties": {
+        "planId": {
+          "type": "string",
+          "description": "Document ID of the reviewed TreatmentPlan.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "planCode": {
+          "type": "string",
+          "description": "Human-readable QUS assessment code.",
+          "minLength": 3,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "patientUid": {
+          "type": "string",
+          "description": "UID of the astronaut who owns the reviewed treatment plan.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "patientName": {
+          "type": "string",
+          "description": "Display name of the astronaut.",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "doctorUid": {
+          "type": "string",
+          "description": "UID of the verifying doctor.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "doctorName": {
+          "type": "string",
+          "description": "Display name of the verifying doctor.",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "decision": {
+          "type": "string",
+          "description": "Physician clearance decision.",
+          "enum": ["approved", "not_approved"]
+        },
+        "negativePoints": {
+          "type": "string",
+          "description": "Clinical risks or contraindications when not approved.",
+          "maxLength": 2000
+        },
+        "improvements": {
+          "type": "string",
+          "description": "Recommended modifications when not approved.",
+          "maxLength": 2000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the review was submitted."
+        }
+      },
+      "required": [
+        "planId",
+        "planCode",
+        "patientUid",
+        "patientName",
+        "doctorUid",
+        "doctorName",
+        "decision",
+        "negativePoints",
+        "improvements",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Non-PII mission profile document keyed by Firebase Auth UID."
+    },
+    "/users/{userId}/private/{docId}": {
+      "schema": { "$ref": "#/entities/UserPrivateInfo" },
+      "description": "Isolated PII subcollection storing verified email at docId 'info'."
+    },
+    "/doctors/{doctorUid}": {
+      "schema": { "$ref": "#/entities/DoctorAuthorization" },
+      "description": "Trusted allowlist of verified Doctor UIDs managed by the Mission Admin."
+    },
+    "/treatmentPlans/{planId}": {
+      "schema": { "$ref": "#/entities/TreatmentPlan" },
+      "description": "Physical treatment plans generated by users and auto-dispatched for doctor approval."
+    },
+    "/treatmentFeedback/{feedbackId}": {
+      "schema": { "$ref": "#/entities/TreatmentFeedback" },
+      "description": "Physician approval decisions and revision notes tied atomically to treatmentPlans."
+    }
+  }
+}

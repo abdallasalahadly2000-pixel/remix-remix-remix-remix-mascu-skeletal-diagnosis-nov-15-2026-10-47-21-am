@@ -1,0 +1,6 @@
+{
+  "name": "Mascu-Skeletal Diagnosis",
+  "description": "Orbital musculoskeletal health and bone-density diagnostic interface.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
